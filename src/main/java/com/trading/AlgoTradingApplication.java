@@ -1,4 +1,4 @@
-package com.algo.trading.algotrading;
+package com.trading;
 
 import com.angelbroking.smartapi.SmartConnect;
 import com.angelbroking.smartapi.http.SessionExpiryHook;
@@ -17,6 +17,9 @@ public class AlgoTradingApplication {
 	@Value("${angel.password}")
 	private static String password;
 
+	@Value("${angel.api.key}")
+	private static String apiKey;
+
 
 	public static void main(String[] args) {
 
@@ -24,7 +27,7 @@ public class AlgoTradingApplication {
 		SmartConnect smartConnect = new SmartConnect();
 
 		// Provide your api key here
-		smartConnect.setApiKey("<api_key>");
+		smartConnect.setApiKey(apiKey);
 
 		// Set session expiry callback.
 		smartConnect.setSessionExpiryHook(new SessionExpiryHook() {

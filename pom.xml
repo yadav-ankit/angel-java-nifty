@@ -41,6 +41,22 @@
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20210307</version>
+		</dependency>
+
+
+		<dependency>
+			<groupId>com.angelbroking.smartapi</groupId>
+			<artifactId>smartapi</artifactId>
+			<version>1.0</version>
+			<scope>system</scope>
+			<systemPath>C:\Ankit\Complex\GitHub\leave-ur-job\smartapi-java-1.0.0.jar</systemPath>
+		</dependency>
+
 	</dependencies>
 
 	<build>
@@ -59,5 +75,6 @@
 			</plugin>
 		</plugins>
 	</build>
+
 
 </project>
