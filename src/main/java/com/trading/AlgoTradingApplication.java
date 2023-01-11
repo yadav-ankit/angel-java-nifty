@@ -41,7 +41,7 @@ public class AlgoTradingApplication {
             }
         });
 
-        User user = smartConnect.generateSession("A844782", "9725", getTOTPCode("4TLPUQ4SFZKRXMEYSFRBKGKFOY"));
+        User user = smartConnect.generateSession("CLIENT_ID", "9725", getTOTPCode("YOUR_TOPT_CODE"));
 
         String feedToken = user.getFeedToken();
         System.out.println(feedToken);
