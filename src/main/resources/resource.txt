@@ -1,0 +1,10 @@
+https://github.com/yadav-ankit/leave-ur-job/settings
+
+https://stackoverflow.com/questions/5692256/maven-best-way-of-linking-custom-external-jar-to-my-project
+
+https://vitalflux.com/create-aws-lambda-deployment-jar-using-maven/
+
+
+===================
+
+If problem comes that smart-api-jar is not found then make ur repo public
