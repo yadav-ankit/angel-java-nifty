@@ -8,3 +8,26 @@ https://vitalflux.com/create-aws-lambda-deployment-jar-using-maven/
 ===================
 
 If problem comes that smart-api-jar is not found then make ur repo public
+
+==========
+
+STATS
+
+Lambda
+1 min to run
+
+for every 5 mins 75 times a day
+
+Billed for 75 mins a day
+
+Billed for 1650 mins = 20 Rs / month
+
+========
+s3
+
+1 file 3kb ..75 files in a day = around 300 kb in a day
+
+7 MB / month
+
+i.e 100 MB/ year
+
