@@ -60,7 +60,7 @@ public class Angel implements RequestStreamHandler {
             //Thread.sleep(100);
         }
 
-       // writeToS3(niftyList);
+        writeToS3(niftyList);
     }
 
     private static void writeToS3(List<Index> niftyList) {
@@ -95,7 +95,7 @@ public class Angel implements RequestStreamHandler {
         String file_path = "/tmp/filename.txt";
         Path path = FileSystems.getDefault().getPath("/tmp", "filename.txt");
 
-        String folder = new SimpleDateFormat("yyyy-MM-dd").toString();
+        String folder = new SimpleDateFormat("yyyy-MM-dd").format(new Date());
         String file = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
         String key_name = folder + "/" + file + ".txt";
 
@@ -315,8 +315,3 @@ public class Angel implements RequestStreamHandler {
         writeToS3(niftyList);
     }
 }
-
-
-
-
-
