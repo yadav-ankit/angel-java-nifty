@@ -10,6 +10,7 @@ import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -37,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@SpringBootApplication
 public class AlgoTradingApplication {
 
     private static HttpHeaders getHeaders() {
@@ -53,6 +55,7 @@ public class AlgoTradingApplication {
 
     public static void main(String[] args) throws Exception {
 
+        /*
         SmartConnect smartConnect = connectWithAngel();
         List<Index> niftyList = intializeSymbolTokenMap(smartConnect);
         for (Index ele : niftyList) {
@@ -62,6 +65,7 @@ public class AlgoTradingApplication {
         }
 
         writeToS3(niftyList);
+         */
     }
 
     private static void writeToS3(List<Index> niftyList) {
