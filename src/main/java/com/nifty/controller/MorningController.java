@@ -20,6 +20,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -27,7 +28,7 @@ import java.util.List;
 @RestController
 public class MorningController {
 
-
+    // http://localhost:8099/nifty/reloadCache
     @GetMapping("/reloadCache")
     public String reloadCache() {
         HttpEntity<String> request = new HttpEntity<>(new HttpHeaders());
@@ -102,8 +103,71 @@ public class MorningController {
             i = -1;
         }
 
+        int n = 10;
+        Collections.reverse(candleList);
+
         System.out.println(candleList.size());
 
+        List<Candle> lastNCandles = new ArrayList<>();
+        for(int j = 0 ; j< candleList.size();j++){
+            if(j<n){
+                lastNCandles.add(candleList.get(j));
+            }
+        }
+
+        Collections.reverse(lastNCandles);
+        System.out.println(lastNCandles.size());
+
+        // add a temp candle
+
+        Candle tempCandle = new Candle();
+        tempCandle.setOpen(18201.23);
+        tempCandle.setHigh(18210.43);
+        tempCandle.setLow(18190.83);
+        tempCandle.setClose(18195.53);
+
+        lastNCandles.add(tempCandle);
+
+        findTrueRange(lastNCandles);
+
+        System.out.println(lastNCandles.size());
+
+
+        findAverageTrueRange(lastNCandles,n,10);
+
+        System.out.println(lastNCandles.size());
+    }
+
+    private void findTrueRange(List<Candle> lastNCandles){
+
+        // true_range = max (h-l,abs(h-pc),abs(l-pc));
+
+        for(int i=1;i<lastNCandles.size();i++){
+            Candle currentCandle = lastNCandles.get(i);
+            Candle prevCandle = lastNCandles.get(i-1);
+
+            double h_l = currentCandle.getHigh() - currentCandle.getLow();
+            double h_pc = Math.abs(currentCandle.getHigh() - prevCandle.getClose());
+            double l_pc = Math.abs(currentCandle.getLow() - prevCandle.getClose());
+
+            double tr = Math.max(h_l,Math.max(h_pc,l_pc));
+
+            tr = tr*10000;
+            tr = Math.round(tr);
+            tr = tr /10000;
+
+            currentCandle.setTr(tr);
+        }
+    }
+
+    private void findAverageTrueRange(List<Candle> candleList,int n,int index){
+        double sum = 0;
+
+       for(int i=index-n;i<index;i++){
+           sum = sum + candleList.get(i).getTr();
+       }
+
+       candleList.get(index).setAtr(sum/n);
     }
 }
 

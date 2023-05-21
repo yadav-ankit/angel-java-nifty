@@ -9,6 +9,24 @@ public class Candle {
     private double close;
     private double useless1;
     private double useless2;
+    private double tr;
+    private double atr;
+
+    public double getTr() {
+        return tr;
+    }
+
+    public void setTr(double tr) {
+        this.tr = tr;
+    }
+
+    public double getAtr() {
+        return atr;
+    }
+
+    public void setAtr(double atr) {
+        this.atr = atr;
+    }
 
     public String getDate() {
         return date;
