@@ -15,15 +15,20 @@
 
     <repositories>
         <repository>
-            <id>leave-ur-job</id>
-            <name>leave UR Job</name>
-            <url>https://github.com/yadav-ankit/leave-ur-job</url>
+            <id>angel-java-nifty</id>
+            <name>angel-java-nifty</name>
+            <url>https://github.com/yadav-ankit/angel-java-nifty/tree/main/</url>
         </repository>
     </repositories>
 
     <dependencies>
 
-        <!-- https://mvnrepository.com/artifact/org.springframework.boot/spring-boot-starter-aop -->
+        <dependency>
+            <groupId>io.awspring.cloud</groupId>
+            <artifactId>spring-cloud-aws-messaging</artifactId>
+            <version>2.4.2</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
