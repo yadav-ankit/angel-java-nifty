@@ -97,10 +97,9 @@ public class MorningController {
                         candle.setClose(candleDetails.getAsDouble());
                         continue;
                 }
-
-                candleList.add(candle);
             }
-            i = 0;
+            candleList.add(candle);
+            i = -1;
         }
 
         System.out.println(candleList.size());
