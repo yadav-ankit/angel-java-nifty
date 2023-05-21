@@ -1,11 +1,10 @@
 package com.nifty;
 
-import com.amazonaws.services.lambda.runtime.Context;
-import com.amazonaws.services.lambda.runtime.RequestStreamHandler;
 import com.angelbroking.smartapi.SmartConnect;
 import com.angelbroking.smartapi.http.SessionExpiryHook;
 import com.angelbroking.smartapi.models.User;
 import com.google.gson.*;
+import com.trading.Index;
 import de.taimos.totp.TOTP;
 import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.binary.Hex;
@@ -24,7 +23,9 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -36,7 +37,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class Angel implements RequestStreamHandler {
+public class AlgoTradingApplication {
 
     private static HttpHeaders getHeaders() {
         HttpHeaders headers = new HttpHeaders();
@@ -300,18 +301,5 @@ public class Angel implements RequestStreamHandler {
             niftyLtp = niftyLtp - (mod);
         }
         return String.valueOf(niftyLtp);
-    }
-
-
-    @Override
-    public void handleRequest(InputStream inputStream, OutputStream outputStream, Context context) throws IOException {
-        SmartConnect smartConnect = connectWithAngel();
-        List<Index> niftyList = intializeSymbolTokenMap(smartConnect);
-        for (Index ele : niftyList) {
-            JSONObject obj = smartConnect.getLTP(ele.getExchSeg(), ele.getSymbol(), ele.getToken());
-            ele.setLtp(obj.get("ltp").toString());
-        }
-
-        writeToS3(niftyList);
     }
 }
