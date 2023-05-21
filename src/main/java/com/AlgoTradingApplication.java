@@ -1,4 +1,4 @@
-package com.nifty;
+package com;
 
 import com.angelbroking.smartapi.SmartConnect;
 import com.angelbroking.smartapi.http.SessionExpiryHook;
