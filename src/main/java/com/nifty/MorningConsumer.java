@@ -7,19 +7,30 @@ import com.google.gson.JsonElement;
 import com.nifty.dto.Candle;
 import io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy;
 import io.awspring.cloud.messaging.listener.annotation.SqsListener;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 
+@Slf4j
 @Component
 public class MorningConsumer {
+
+
+    @PostConstruct
+    public void tess(){
+      log.info("YHA to start hua h !!!!!!");
+    }
 
     @SqsListener(value = "${sqs.morning.queue}", deletionPolicy = SqsMessageDeletionPolicy.DEFAULT)
     public void receiveMessage(String event) {
         JSONObject jsonObject = new JSONObject(event);
+        log.info("msg recieved as " , event);
+
         String details = jsonObject.getJSONObject("data").getJSONArray("candles").toString();
 
         List<Candle> candleList = new ArrayList<>();

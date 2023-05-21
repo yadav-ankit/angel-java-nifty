@@ -7,6 +7,7 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClientBuilder;
+import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Configuration;
 
@@ -16,8 +17,8 @@ import javax.annotation.PostConstruct;
 @Configuration
 public class SQSClientConfiguration {
 
-    private final String awsAccessKeyId = "AKIAY6BZCFHO6WU7FG5X";
-    private final String awsSecretKeyId = "wdhwo+vlTlSq28dAYsiQ8qs+csxnuYRD5vJH1XNN";
+    private final String awsAccessKeyId = "AKIAY6BZCFHOZFO6GYZK";
+    private final String awsSecretKeyId = "INie/zGXYGyOsiwCgXSTIi77nVsmWsZchRYPJ25a";
 
     private AmazonSQS client;
 
@@ -28,6 +29,8 @@ public class SQSClientConfiguration {
                         .withCredentials(getAwsCredentialProvider())
                         .withRegion(Regions.US_EAST_2)
                         .build();
+
+        log.info("QUEUE Connection SUCCESS !!!!!!!");
     }
 
     private AWSCredentialsProvider getAwsCredentialProvider() {
