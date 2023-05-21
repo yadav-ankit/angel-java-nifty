@@ -15,6 +15,7 @@ import javax.annotation.PostConstruct;
 @Slf4j
 @Configuration
 public class SQSClientConfiguration {
+
     private final String awsAccessKeyId = "AKIAY6BZCFHO6WU7FG5X";
     private final String awsSecretKeyId = "wdhwo+vlTlSq28dAYsiQ8qs+csxnuYRD5vJH1XNN";
 
