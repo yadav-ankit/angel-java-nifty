@@ -10,6 +10,7 @@ import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -54,6 +55,7 @@ public class AlgoTradingApplication {
 
 
     public static void main(String[] args) throws Exception {
+        SpringApplication.run(AlgoTradingApplication.class, args);
 
         /*
         SmartConnect smartConnect = connectWithAngel();

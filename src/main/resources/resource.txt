@@ -4,6 +4,8 @@ https://stackoverflow.com/questions/5692256/maven-best-way-of-linking-custom-ext
 
 https://vitalflux.com/create-aws-lambda-deployment-jar-using-maven/
 
+https://jsoneditoronline.org/#left=local.juluda&right=local.sakuyo
+
 
 ===================
 
