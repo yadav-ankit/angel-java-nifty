@@ -17,8 +17,8 @@ import javax.annotation.PostConstruct;
 @Configuration
 public class SQSClientConfiguration {
 
-    private final String awsAccessKeyId = "AKIAY6BZCFHOZFO6GYZK";
-    private final String awsSecretKeyId = "INie/zGXYGyOsiwCgXSTIi77nVsmWsZchRYPJ25a";
+    private final String awsAccessKeyId = "";
+    private final String awsSecretKeyId = "";
 
     private AmazonSQS client;
 
