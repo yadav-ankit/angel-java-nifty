@@ -10,6 +10,9 @@ import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
@@ -41,10 +44,22 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @SpringBootApplication(scanBasePackages = {"com"},exclude = { SecurityAutoConfiguration.class })
-public class AlgoTradingApplication {
+public class AlgoTradingApplication implements ApplicationRunner {
+
+    @Value("${morning.url}")
+    private String url;
+
+  //  mvn spring-boot:run -Dspring-boot.run.arguments=--person.name=Test
+
+    @Override
+    public void run( ApplicationArguments args ) throws Exception
+    {
+        System.out.println( "url: " + url );
+    }
 
     public static void main(String[] args) throws Exception {
         SpringApplication.run(AlgoTradingApplication.class, args);
+
 
         /*
         SmartConnect smartConnect = connectWithAngel();
