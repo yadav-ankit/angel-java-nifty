@@ -4,6 +4,7 @@ import com.angelbroking.smartapi.SmartConnect;
 import com.angelbroking.smartapi.http.SessionExpiryHook;
 import com.angelbroking.smartapi.models.User;
 import com.google.gson.*;
+import com.nifty.dto.Candle;
 import com.trading.Index;
 import de.taimos.totp.TOTP;
 import org.apache.commons.codec.binary.Base32;
@@ -41,37 +42,96 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
-@SpringBootApplication(scanBasePackages = {"com"},exclude = { SecurityAutoConfiguration.class })
+@SpringBootApplication(scanBasePackages = {"com"}, exclude = {SecurityAutoConfiguration.class})
 public class AlgoTradingApplication implements ApplicationRunner {
 
     @Value("${morning.url}")
     private String url;
 
-  //  mvn spring-boot:run -Dspring-boot.run.arguments=--person.name=Test
-
-    @Override
-    public void run( ApplicationArguments args ) throws Exception
-    {
-        System.out.println( "url: " + url );
-    }
+    //  mvn spring-boot:run -Dspring-boot.run.arguments=--morning.url=http://localhost:8090/tree
 
     public static void main(String[] args) throws Exception {
+        AtomicInteger count = new AtomicInteger(1);
         SpringApplication.run(AlgoTradingApplication.class, args);
 
+        SmartConnect smartConnect = connectWithAngel();
 
         /*
-        SmartConnect smartConnect = connectWithAngel();
+        every 10 seconds  start with count = 1...6 times in 1 min   ...... 30 times in 5 mins
+         when count becomes 30  ...do this
+             close_curr = ltp = open_next
+            curr.high = high;
+            curr.low = low
+         */
+
+        List<Candle> candleList = new ArrayList<>();
+        AtomicInteger open = new AtomicInteger(99999);
+        AtomicInteger close = new AtomicInteger(99999);
+        AtomicInteger low = new AtomicInteger(99999);
+        AtomicInteger high = new AtomicInteger(-9999);
+
+
+        Runnable periodicRunnable = () -> {
+            try {
+                String ltp = getNiftyltp(smartConnect);
+
+                int niftyLtp = Integer.parseInt(ltp);
+
+                high.set(Math.max(niftyLtp, high.get()));
+                low.set(Math.min(niftyLtp, low.get()));
+
+                if(count.get() == 1){
+                    open.set(niftyLtp);
+                }
+
+                if(count.get() >= 30){
+                    close.set(niftyLtp);
+                }
+
+            } finally {
+                int c = count.get();
+
+                if (c >= 30) {
+                    count.set(1);
+                    Candle candle = new Candle();
+                    candle.setLow(low.get());
+                    candle.setHigh(high.get());
+                    candle.setOpen(open.get());
+                    candle.setClose(close.get());
+
+                    candleList.add(candle);
+                }
+                count.getAndIncrement();
+            }
+
+            Candle printt = candleList.get(candleList.size()-1);
+            System.out.println("close " + printt.getClose());
+            System.out.println("open " + printt.getOpen());
+            System.out.println("high " + printt.getHigh());
+            System.out.println("low " + printt.getLow());
+
+        };
+
+        ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
+        executor.scheduleAtFixedRate(periodicRunnable, 0, 10, TimeUnit.SECONDS);
+
+        /*
         List<Index> niftyList = intializeSymbolTokenMap(smartConnect);
         for (Index ele : niftyList) {
             JSONObject obj = smartConnect.getLTP(ele.getExchSeg(), ele.getSymbol(), ele.getToken());
             ele.setLtp(obj.get("ltp").toString());
-            //Thread.sleep(100);
+            Thread.sleep(100);
         }
 
-        writeToS3(niftyList);
          */
+
+        //  writeToS3(niftyList);
     }
 
     private static HttpHeaders getHeaders() {
@@ -84,7 +144,6 @@ public class AlgoTradingApplication implements ApplicationRunner {
 
         return headers;
     }
-
 
     private static void writeToS3(List<Index> niftyList) {
         try {
@@ -323,5 +382,10 @@ public class AlgoTradingApplication implements ApplicationRunner {
             niftyLtp = niftyLtp - (mod);
         }
         return String.valueOf(niftyLtp);
+    }
+
+    @Override
+    public void run(ApplicationArguments args) throws Exception {
+        System.out.println("url: " + url);
     }
 }
