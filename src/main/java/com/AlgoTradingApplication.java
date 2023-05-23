@@ -46,6 +46,8 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 @SpringBootApplication(scanBasePackages = {"com"}, exclude = {SecurityAutoConfiguration.class})
@@ -57,7 +59,6 @@ public class AlgoTradingApplication implements ApplicationRunner {
     //  mvn spring-boot:run -Dspring-boot.run.arguments=--morning.url=http://localhost:8090/tree
 
     public static void main(String[] args) throws Exception {
-        AtomicInteger count = new AtomicInteger(1);
         SpringApplication.run(AlgoTradingApplication.class, args);
 
         SmartConnect smartConnect = connectWithAngel();
@@ -70,35 +71,33 @@ public class AlgoTradingApplication implements ApplicationRunner {
             curr.low = low
          */
 
+        AtomicLong startTime = new AtomicLong(System.currentTimeMillis());
+        final boolean[] isStarted = {false};
+        boolean is5MinsCompleted = false;
+
         List<Candle> candleList = new ArrayList<>();
-        AtomicInteger open = new AtomicInteger(99999);
-        AtomicInteger close = new AtomicInteger(99999);
-        AtomicInteger low = new AtomicInteger(99999);
-        AtomicInteger high = new AtomicInteger(-9999);
+        AtomicReference<Double> open = new AtomicReference<>();
+        AtomicReference<Double> close = new AtomicReference<>();
+        AtomicReference<Double> low = new AtomicReference(999999.23);
+        AtomicReference<Double> high = new AtomicReference(-999.23);
 
 
         Runnable periodicRunnable = () -> {
             try {
                 String ltp = getNiftyltp(smartConnect);
 
-                int niftyLtp = Integer.parseInt(ltp);
+                double niftyLtp = Double.parseDouble(ltp);
 
-                high.set(Math.max(niftyLtp, high.get()));
-                low.set(Math.min(niftyLtp, low.get()));
-
-                if(count.get() == 1){
+                if (!isStarted[0]) {
                     open.set(niftyLtp);
+                    isStarted[0] = true;
+                } else {
+                    high.set(Math.max(niftyLtp, high.get()));
+                    low.set(Math.min(niftyLtp, low.get()));
                 }
 
-                if(count.get() >= 30){
+                if (System.currentTimeMillis() - startTime.get() >= 30000) {
                     close.set(niftyLtp);
-                }
-
-            } finally {
-                int c = count.get();
-
-                if (c >= 30) {
-                    count.set(1);
                     Candle candle = new Candle();
                     candle.setLow(low.get());
                     candle.setHigh(high.get());
@@ -106,15 +105,21 @@ public class AlgoTradingApplication implements ApplicationRunner {
                     candle.setClose(close.get());
 
                     candleList.add(candle);
+
+                    startTime.set(System.currentTimeMillis());
+                    open.set(niftyLtp);
                 }
-                count.getAndIncrement();
+            } catch (Exception e) {
+                e.printStackTrace();
             }
 
-            Candle printt = candleList.get(candleList.size()-1);
-            System.out.println("close " + printt.getClose());
-            System.out.println("open " + printt.getOpen());
-            System.out.println("high " + printt.getHigh());
-            System.out.println("low " + printt.getLow());
+            if(!candleList.isEmpty()){
+                Candle printt = candleList.get(candleList.size() - 1);
+                System.out.println("close " + printt.getClose());
+                System.out.println("open " + printt.getOpen());
+                System.out.println("high " + printt.getHigh());
+                System.out.println("low " + printt.getLow());
+            }
 
         };
 
@@ -372,8 +377,12 @@ public class AlgoTradingApplication implements ApplicationRunner {
 
     private static String getNiftyltp(SmartConnect smartConnect) {
         JSONObject indexObj = smartConnect.getLTP("NSE", "NIFTY", "26000");
-        int niftyLtp = Integer.parseInt(indexObj.get("ltp").toString().substring(0, 5));
+       // int niftyLtp = Integer.parseInt(indexObj.get("ltp").toString().substring(0, 5));
 
+        double niftyLtp = Double.parseDouble(indexObj.get("ltp").toString());
+
+
+        /*
         int mod = (niftyLtp) % 100;
         System.out.println("nifty ltp is " + niftyLtp);
         if (mod > 50) {
@@ -381,6 +390,8 @@ public class AlgoTradingApplication implements ApplicationRunner {
         } else {
             niftyLtp = niftyLtp - (mod);
         }
+
+         */
         return String.valueOf(niftyLtp);
     }
 
