@@ -1,5 +1,8 @@
 package com.nifty.dto;
 
+import lombok.Builder;
+
+@Builder
 public class Candle {
 
     private String date;

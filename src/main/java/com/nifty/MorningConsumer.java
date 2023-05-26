@@ -39,7 +39,7 @@ public class MorningConsumer {
 
             for (JsonElement candleDetails : candleDetailsArray) {
 
-                Candle candle = new Candle();
+                Candle candle = Candle.builder().build();
 
                 switch (i) {
                     case 0:

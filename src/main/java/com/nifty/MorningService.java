@@ -70,7 +70,7 @@ public class MorningService {
         for (JsonElement kiteElement : kiteResponse.getAsJsonObject("data").getAsJsonArray("candles")) {
 
             JsonArray candleDetailsArray = kiteElement.getAsJsonArray();
-            Candle candle = new Candle();
+            Candle candle = Candle.builder().build();
             for (JsonElement candleDetails : candleDetailsArray) {
                 i++;
                 switch (i) {

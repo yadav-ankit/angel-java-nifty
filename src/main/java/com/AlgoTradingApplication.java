@@ -8,6 +8,7 @@ import com.nifty.MorningService;
 import com.nifty.dto.Candle;
 import com.trading.Index;
 import de.taimos.totp.TOTP;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
@@ -51,6 +52,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
+@Slf4j
 @SpringBootApplication(scanBasePackages = {"com"}, exclude = {SecurityAutoConfiguration.class})
 public class AlgoTradingApplication implements ApplicationRunner {
 
@@ -63,6 +65,42 @@ public class AlgoTradingApplication implements ApplicationRunner {
 
     public static void main(String[] args) throws Exception {
         SpringApplication.run(AlgoTradingApplication.class, args);
+        List<Candle> candleList = new ArrayList<>();
+
+        candleList.add(Candle.builder().high(1).build());
+        candleList.add(Candle.builder().high(2).build());
+        candleList.add(Candle.builder().high(3).build());
+
+        candleList.add(Candle.builder().high(4).build());
+        candleList.add(Candle.builder().high(5).build());
+        candleList.add(Candle.builder().high(6).build());
+        candleList.add(Candle.builder().high(7).build());
+        candleList.add(Candle.builder().high(8).build());
+        candleList.add(Candle.builder().high(9).build());
+        candleList.add(Candle.builder().high(10).build());
+        candleList.add(Candle.builder().high(11).build());
+        candleList.add(Candle.builder().high(12).build());
+        candleList.add(Candle.builder().high(13).build());
+
+        List<Candle> ans = extractLastNCandles(candleList,10);
+
+        System.out.println(ans.size());
+
+    }
+
+    public static List<Candle> extractLastNCandles(List<Candle> candleList,int n){
+        List<Candle> finalCandles = new ArrayList<>();
+        int size = candleList.size();
+
+        if(n > size){
+            log.error("N is greater  then candles List size");
+            return new ArrayList<>();
+        }
+
+        for(int i = size-n;i<size;i++){
+            finalCandles.add(candleList.get(i));
+        }
+        return finalCandles;
     }
 
     public static void execute(List<Candle> candleList) {
@@ -78,9 +116,13 @@ public class AlgoTradingApplication implements ApplicationRunner {
 
         AtomicLong startTime = new AtomicLong(System.currentTimeMillis());
         final boolean[] isStarted = {false};
-        boolean is5MinsCompleted = false;
 
         AtomicReference<Double> open = new AtomicReference<>();
+
+        if(!candleList.isEmpty() && !isStarted[0]){
+            open.set(candleList.get(candleList.size()-1).getClose());
+        }
+
         AtomicReference<Double> close = new AtomicReference<>();
         AtomicReference<Double> low = new AtomicReference(999999.23);
         AtomicReference<Double> high = new AtomicReference(-999.23);
@@ -102,11 +144,13 @@ public class AlgoTradingApplication implements ApplicationRunner {
 
                 if (System.currentTimeMillis() - startTime.get() >= 300000) {
                     close.set(niftyLtp);
-                    Candle candle = new Candle();
-                    candle.setLow(low.get());
-                    candle.setHigh(high.get());
-                    candle.setOpen(open.get());
-                    candle.setClose(close.get());
+
+                    Candle candle =Candle.builder()
+                            .low(low.get())
+                            .high(high.get())
+                            .open(open.get())
+                            .close(close.get())
+                            .build();
 
                     candleList.add(candle);
 
@@ -404,9 +448,9 @@ public class AlgoTradingApplication implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         System.out.println("url: " + url);
-        List<Candle> candleList = morningService.createCandlesData(url);
+     //   List<Candle> candleList = morningService.createCandlesData(url);
 
-         execute(candleList);
+      //   execute(candleList);
     }
 
 
