@@ -4,6 +4,7 @@ import com.angelbroking.smartapi.SmartConnect;
 import com.angelbroking.smartapi.http.SessionExpiryHook;
 import com.angelbroking.smartapi.models.User;
 import com.google.gson.*;
+import com.nifty.MorningService;
 import com.nifty.dto.Candle;
 import com.trading.Index;
 import de.taimos.totp.TOTP;
@@ -11,6 +12,7 @@ import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
@@ -45,7 +47,6 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
@@ -53,6 +54,8 @@ import java.util.stream.Collectors;
 @SpringBootApplication(scanBasePackages = {"com"}, exclude = {SecurityAutoConfiguration.class})
 public class AlgoTradingApplication implements ApplicationRunner {
 
+    @Autowired
+    MorningService morningService;
     @Value("${morning.url}")
     private String url;
 
@@ -60,7 +63,9 @@ public class AlgoTradingApplication implements ApplicationRunner {
 
     public static void main(String[] args) throws Exception {
         SpringApplication.run(AlgoTradingApplication.class, args);
+    }
 
+    public static void execute(List<Candle> candleList) {
         SmartConnect smartConnect = connectWithAngel();
 
         /*
@@ -75,7 +80,6 @@ public class AlgoTradingApplication implements ApplicationRunner {
         final boolean[] isStarted = {false};
         boolean is5MinsCompleted = false;
 
-        List<Candle> candleList = new ArrayList<>();
         AtomicReference<Double> open = new AtomicReference<>();
         AtomicReference<Double> close = new AtomicReference<>();
         AtomicReference<Double> low = new AtomicReference(999999.23);
@@ -96,7 +100,7 @@ public class AlgoTradingApplication implements ApplicationRunner {
                     low.set(Math.min(niftyLtp, low.get()));
                 }
 
-                if (System.currentTimeMillis() - startTime.get() >= 30000) {
+                if (System.currentTimeMillis() - startTime.get() >= 300000) {
                     close.set(niftyLtp);
                     Candle candle = new Candle();
                     candle.setLow(low.get());
@@ -108,18 +112,20 @@ public class AlgoTradingApplication implements ApplicationRunner {
 
                     startTime.set(System.currentTimeMillis());
                     open.set(niftyLtp);
+
+                    if (!candleList.isEmpty()) {
+                        Candle printt = candleList.get(candleList.size() - 1);
+                        System.out.println("close " + printt.getClose());
+                        System.out.println("open " + printt.getOpen());
+                        System.out.println("high " + printt.getHigh());
+                        System.out.println("low " + printt.getLow());
+                    }
+
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
 
-            if(!candleList.isEmpty()){
-                Candle printt = candleList.get(candleList.size() - 1);
-                System.out.println("close " + printt.getClose());
-                System.out.println("open " + printt.getOpen());
-                System.out.println("high " + printt.getHigh());
-                System.out.println("low " + printt.getLow());
-            }
 
         };
 
@@ -377,7 +383,7 @@ public class AlgoTradingApplication implements ApplicationRunner {
 
     private static String getNiftyltp(SmartConnect smartConnect) {
         JSONObject indexObj = smartConnect.getLTP("NSE", "NIFTY", "26000");
-       // int niftyLtp = Integer.parseInt(indexObj.get("ltp").toString().substring(0, 5));
+        // int niftyLtp = Integer.parseInt(indexObj.get("ltp").toString().substring(0, 5));
 
         double niftyLtp = Double.parseDouble(indexObj.get("ltp").toString());
 
@@ -396,7 +402,12 @@ public class AlgoTradingApplication implements ApplicationRunner {
     }
 
     @Override
-    public void run(ApplicationArguments args) throws Exception {
+    public void run(ApplicationArguments args) {
         System.out.println("url: " + url);
+        List<Candle> candleList = morningService.createCandlesData(url);
+
+         execute(candleList);
     }
+
+
 }

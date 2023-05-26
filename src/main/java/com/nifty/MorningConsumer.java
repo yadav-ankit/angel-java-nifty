@@ -21,12 +21,6 @@ import java.util.List;
 public class MorningConsumer {
 
 
-    @PostConstruct
-    public void tess(){
-      log.info("YHA to start hua h !!!!!!");
-    }
-
-    @SqsListener(value = "${sqs.morning.queue}", deletionPolicy = SqsMessageDeletionPolicy.DEFAULT)
     public void receiveMessage(String event) {
         JSONObject jsonObject = new JSONObject(event);
         log.info("msg recieved as " , event);
