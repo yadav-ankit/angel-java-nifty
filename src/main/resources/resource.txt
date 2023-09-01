@@ -11,4 +11,6 @@ https://jsoneditoronline.org/#left=local.juluda&right=local.sakuyo
 
 If problem comes that smart-api-jar is not found then make ur repo public
 
+also rename setting.xml for time being.
+
 ==========
