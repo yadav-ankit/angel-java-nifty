@@ -1,29 +1,38 @@
 package com.nifty;
 
 
+import com.angelbroking.smartapi.SmartConnect;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.nifty.angelbroking.AngelConnector;
 import com.nifty.dto.Candle;
+import com.nifty.util.ServiceUtil;
 import io.awspring.cloud.messaging.listener.SqsMessageDeletionPolicy;
 import io.awspring.cloud.messaging.listener.annotation.SqsListener;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 @Component
 public class MorningConsumer {
 
-
     public void receiveMessage(String event) {
         JSONObject jsonObject = new JSONObject(event);
-        log.info("msg recieved as " , event);
+        log.info("msg recieved as ", event);
 
         String details = jsonObject.getJSONObject("data").getJSONArray("candles").toString();
 
