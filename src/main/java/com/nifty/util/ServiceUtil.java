@@ -66,9 +66,9 @@ public class ServiceUtil {
             Candle currentCandle = lastNCandles.get(i);
             Candle prevCandle = lastNCandles.get(i - 1);
 
-            double h_l = currentCandle.getHigh() - currentCandle.getLow();
-            double h_pc = Math.abs(currentCandle.getHigh() - prevCandle.getClose());
-            double l_pc = Math.abs(currentCandle.getLow() - prevCandle.getClose());
+            double h_l = currentCandle.high - currentCandle.low;
+            double h_pc = Math.abs(currentCandle.high - prevCandle.close);
+            double l_pc = Math.abs(currentCandle.low - prevCandle.close);
 
             double tr = Math.max(h_l, Math.max(h_pc, l_pc));
 
@@ -86,10 +86,10 @@ public class ServiceUtil {
         double sum = 0;
 
         for (int i = index - n; i < index; i++) {
-            sum = sum + candleList.get(i).getTr();
+            sum = sum + candleList.get(i).atr;
         }
 
-        candleList.get(index-1).setAtr(sum / n);
+        candleList.get(index-1).atr = (sum / n);
     }
 
 

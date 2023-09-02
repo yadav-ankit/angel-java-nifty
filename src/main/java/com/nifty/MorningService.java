@@ -95,19 +95,19 @@ public class MorningService {
                 i++;
                 switch (i) {
                     case 0:
-                        candle.setDate(candleDetails.getAsString());
+                        candle.date = (candleDetails.getAsString());
                         continue;
                     case 1:
-                        candle.setOpen(candleDetails.getAsDouble());
+                        candle.open = (candleDetails.getAsDouble());
                         continue;
                     case 2:
-                        candle.setHigh(candleDetails.getAsDouble());
+                        candle.high = (candleDetails.getAsDouble());
                         continue;
                     case 3:
-                        candle.setLow(candleDetails.getAsDouble());
+                        candle.low = (candleDetails.getAsDouble());
                         continue;
                     case 4:
-                        candle.setClose(candleDetails.getAsDouble());
+                        candle.close = (candleDetails.getAsDouble());
                         continue;
                 }
             }
@@ -145,8 +145,7 @@ public class MorningService {
 
         System.out.println(lastNCandles.size());
 
-
-        findAverageTrueRange(lastNCandles, n, 10);
+        setAverageTrueRange(lastNCandles, n, 10);
 
         System.out.println(lastNCandles.size());
 
@@ -161,9 +160,9 @@ public class MorningService {
             Candle currentCandle = lastNCandles.get(i);
             Candle prevCandle = lastNCandles.get(i - 1);
 
-            double h_l = currentCandle.getHigh() - currentCandle.getLow();
-            double h_pc = Math.abs(currentCandle.getHigh() - prevCandle.getClose());
-            double l_pc = Math.abs(currentCandle.getLow() - prevCandle.getClose());
+            double h_l = currentCandle.high - currentCandle.low;
+            double h_pc = Math.abs(currentCandle.high - prevCandle.close);
+            double l_pc = Math.abs(currentCandle.low - prevCandle.close);
 
             double tr = Math.max(h_l, Math.max(h_pc, l_pc));
 
@@ -171,18 +170,18 @@ public class MorningService {
             tr = Math.round(tr);
             tr = tr / 10000;
 
-            currentCandle.setTr(tr);
+            currentCandle.tr = tr;
         }
     }
 
-    private void findAverageTrueRange(List<Candle> candleList, int n, int index) {
+    private void setAverageTrueRange(List<Candle> candleList, int n, int index) {
         double sum = 0;
 
         for (int i = index - n; i < index; i++) {
-            sum = sum + candleList.get(i).getTr();
+            sum = sum + candleList.get(i).tr;
         }
 
-        candleList.get(index - 1).setAtr(sum / n);
+        candleList.get(index - 1).atr = (sum / n);
     }
 
     public void performIntradayTrading() {
@@ -204,7 +203,7 @@ public class MorningService {
         AtomicReference<Double> open = new AtomicReference<>();
 
         if (!candleList.isEmpty() && !isStarted[0]) {
-            open.set(candleList.get(candleList.size() - 1).getClose());
+            open.set(candleList.get(candleList.size() - 1).close);
         }
 
         Runnable periodicRunnable = getRunnableInstance(candleList, smartConnect, n, startTime, isStarted, open);
@@ -248,7 +247,7 @@ public class MorningService {
                     candleList.add(candle);
 
                     int size = candleList.size();
-                    candleList.get(size - 1).setTr(serviceUtil.extractTrueRange(candleList, n));
+                    candleList.get(size - 1).tr = (serviceUtil.extractTrueRange(candleList, n));
                     serviceUtil.setAverageTrueRange(candleList, n, size);
 
                     startTime.set(System.currentTimeMillis());
@@ -256,10 +255,10 @@ public class MorningService {
 
                     if (!candleList.isEmpty()) {
                         Candle printt = candleList.get(candleList.size() - 1);
-                        System.out.println("close " + printt.getClose());
-                        System.out.println("open " + printt.getOpen());
-                        System.out.println("high " + printt.getHigh());
-                        System.out.println("low " + printt.getLow());
+                        System.out.println("close " + printt.close);
+                        System.out.println("open " + printt.open);
+                        System.out.println("high " + printt.high);
+                        System.out.println("low " + printt.low);
                     }
 
                 }

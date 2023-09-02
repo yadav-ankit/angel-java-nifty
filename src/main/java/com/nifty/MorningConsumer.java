@@ -52,15 +52,15 @@ public class MorningConsumer {
 
                 switch (i) {
                     case 0:
-                        candle.setDate(candleDetails.getAsString());
+                        candle.date = (candleDetails.getAsString());
                     case 1:
-                        candle.setOpen(candleDetails.getAsDouble());
+                        candle.open = (candleDetails.getAsDouble());
                     case 2:
-                        candle.setHigh(candleDetails.getAsDouble());
+                        candle.high = (candleDetails.getAsDouble());
                     case 3:
-                        candle.setLow(candleDetails.getAsDouble());
+                        candle.low = (candleDetails.getAsDouble());
                     case 4:
-                        candle.setClose(candleDetails.getAsDouble());
+                        candle.close = (candleDetails.getAsDouble());
                 }
 
                 candleList.add(candle);
