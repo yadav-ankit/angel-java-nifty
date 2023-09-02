@@ -4,7 +4,6 @@ package com.nifty;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.nifty.dto.Candle;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -63,14 +62,14 @@ public class MorningConsumer {
 
     @NotNull
     private List<Candle> getCandlesHelper(List<Candle> candleList) {
-        int n = 10;
+        int SUPERTREND_LENGTH = 10;
         Collections.reverse(candleList);
 
         System.out.println(candleList.size());
 
         List<Candle> lastNCandles = new ArrayList<>();
         for (int j = 0; j < candleList.size(); j++) {
-            if (j < n) {
+            if (j < SUPERTREND_LENGTH*2 + 1) {
                 lastNCandles.add(candleList.get(j));
             }
         }
@@ -91,15 +90,13 @@ public class MorningConsumer {
 
         setTrueRange(lastNCandles);
 
-        System.out.println(lastNCandles.size());
+        setAverageTrueRange(lastNCandles, SUPERTREND_LENGTH, 11);
 
-        setAverageTrueRange(lastNCandles, n, 10);
+        setBasicBands(lastNCandles, SUPERTREND_LENGTH, 11);
 
-        setBasicBands(lastNCandles, n, 10);
+        setFinalBands(lastNCandles, SUPERTREND_LENGTH, 11);
 
-        setFinalBands(lastNCandles, n, 10);
-
-        setSuperTrend(lastNCandles, n, 10);
+        setSuperTrend(lastNCandles, SUPERTREND_LENGTH, 11);
 
         System.out.println(lastNCandles.size());
         return lastNCandles;
@@ -127,13 +124,20 @@ public class MorningConsumer {
         }
     }
 
-    private void setAverageTrueRange(List<Candle> candleList, int n, int index) {
-        double sum = 0;
+    private void setAverageTrueRange(List<Candle> candleList, int SUPERTREND_LENGTH, int startFrom) {
 
-        for (int i = index - n; i < index; i++) {
-            sum = sum + candleList.get(i).tr;
+        for(int i=startFrom; i < candleList.size() ; i++){
+            double sum = 0;
+            double atr = 0;
+            for (int j = i; j >= i - SUPERTREND_LENGTH;  j--) {
+                sum = sum + candleList.get(j).tr;
+            }
+            atr = sum / SUPERTREND_LENGTH;
+            atr = atr * 10000;
+            atr = Math.round(atr);
+            atr = atr / 10000;
+            candleList.get(i).atr = atr;
         }
-        candleList.get(index - 1).atr = (sum / n);
     }
 
     private void setBasicBands(List<Candle> candleList, int n, int index) {
@@ -141,7 +145,7 @@ public class MorningConsumer {
             Basic Upperband  =  (High + Low) / 2 + Multiplier * ATR
             Basic Lowerband =  (High + Low) / 2 – Multiplier * ATR
         */
-        for (int i = index - n; i < index; i++) {
+        for (int i = index; i<candleList.size();i++) {
             Candle candle = candleList.get(i);
 
             candle.basicLowerBand = (candle.high + candle.low) / 2 + 10 * candle.atr;
@@ -158,19 +162,27 @@ public class MorningConsumer {
                                 ELSE
                                     (Previous Final Upperband)
         */
+
         double finalUpperBand = 0;
         double finalLowerBand = 0;
-        for (int i = index - n; i < index; i++) {
+        for (int i = index; i < candleList.size(); i++) {
 
             Candle candle = candleList.get(i);
-            Candle prevCandle = i > 0 ? candleList.get(i - 1) : Candle.builder().build();
+            Candle prevCandle = candleList.get(i - 1);
 
-            if ((candle.basicUpperBand < prevCandle.finalUpperBand) && (prevCandle.close > prevCandle.finalUpperBand)) {
-                finalUpperBand = candle.basicUpperBand;
-            } else {
-                finalUpperBand = prevCandle.finalUpperBand;
-            }
-            candle.finalUpperBand = finalUpperBand;
+
+            if(prevCandle.finalUpperBand == 0){
+                // FIRST CASE when code starts
+                candle.finalUpperBand =  candle.basicUpperBand;
+                candle.finalLowerBand = candle.basicLowerBand;
+            }else {
+
+                if ((candle.basicUpperBand < prevCandle.finalUpperBand) && (prevCandle.close > prevCandle.finalUpperBand)) {
+                    finalUpperBand = candle.basicUpperBand;
+                } else {
+                    finalUpperBand = prevCandle.finalUpperBand;
+                }
+                candle.finalUpperBand = finalUpperBand;
 
 
             /*
@@ -182,12 +194,27 @@ public class MorningConsumer {
                                     (Previous Final Lowerband)
              */
 
-            if ((candle.basicLowerBand > prevCandle.finalLowerBand) && (prevCandle.close < prevCandle.finalLowerBand)) {
-                finalLowerBand = candle.basicLowerBand;
-            } else {
-                finalLowerBand = prevCandle.finalLowerBand;
+                if ((candle.basicLowerBand > prevCandle.finalLowerBand) && (prevCandle.close < prevCandle.finalLowerBand)) {
+                    finalLowerBand = candle.basicLowerBand;
+                } else {
+                    finalLowerBand = prevCandle.finalLowerBand;
+                }
+                candle.finalLowerBand = finalLowerBand;
             }
-            candle.finalLowerBand = finalLowerBand;
+
+            double finalUpper =  candle.finalUpperBand;
+            double finalLower = candle.finalLowerBand;
+
+            finalUpper = finalUpper * 10000;
+            finalUpper = Math.round(finalUpper);
+            finalUpper = finalUpper / 10000;
+
+            finalLower = finalLower * 10000;
+            finalLower = Math.round(finalLower);
+            finalLower = finalLower / 10000;
+
+            candle.finalLowerBand = finalLower;
+            candle.finalUpperBand = finalUpper;
         }
     }
 
@@ -199,7 +226,7 @@ public class MorningConsumer {
                             ELSE
                                 Current  Final Lowerband
         */
-        for (int i = index - n; i < index; i++) {
+        for (int i = index; i < candleList.size(); i++) {
             Candle candle = candleList.get(i);
 
             if(candle.close <= candle.finalUpperBand){
