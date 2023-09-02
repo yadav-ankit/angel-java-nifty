@@ -131,7 +131,7 @@ public class MorningConsumer {
         }
     }
 
-    private void setBasicBands(List<Candle> candleList, int n, int index) {
+    private void setBasicBands(List<Candle> candleList, int SUPERTREND_LENGTH, int index) {
        /*
             Basic Upperband  =  (High + Low) / 2 + Multiplier * ATR
             Basic Lowerband =  (High + Low) / 2 – Multiplier * ATR
@@ -139,8 +139,8 @@ public class MorningConsumer {
         for (int i = index; i<candleList.size();i++) {
             Candle candle = candleList.get(i);
 
-            candle.basicUpperBand = ServiceUtil.roundFigure((candle.high + candle.low) / 2 + 10 * candle.atr);
-            candle.basicLowerBand = ServiceUtil.roundFigure((candle.high + candle.low) / 2 - 10 * candle.atr);
+            candle.basicUpperBand = ServiceUtil.roundFigure(((candle.high + candle.low) / 2) + (SUPERTREND_LENGTH * candle.atr));
+            candle.basicLowerBand = ServiceUtil.roundFigure(((candle.high + candle.low) / 2) - (SUPERTREND_LENGTH * candle.atr));
         }
     }
 
