@@ -81,6 +81,13 @@ public class MorningService {
 
         List<Candle> candleList = createCandlesData(url);
 
+        int test = 0;
+
+        //startTrading(candleList);
+
+    }
+
+    private void startTrading(List<Candle> candleList) {
         SmartConnect smartConnect = AngelConnector.connectWithAngel();
 
         int n = 10;
@@ -103,7 +110,6 @@ public class MorningService {
 
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         executor.scheduleAtFixedRate(periodicRunnable, 0, 10, TimeUnit.SECONDS);
-
     }
 
     @NotNull

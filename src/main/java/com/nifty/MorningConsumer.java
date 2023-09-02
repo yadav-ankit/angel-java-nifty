@@ -21,12 +21,14 @@ public class MorningConsumer {
 
     public List<Candle> consume(String message) {
         List<Candle> candleList = new ArrayList<>();
-        JsonObject kiteResponse = message == null ? null :
+
+        JsonArray kiteResponseArray = message == null ? null :
                 StringUtils.isBlank(message) ?
-                        null : new Gson().fromJson(message, JsonObject.class);
+                        null : new Gson().fromJson(message, JsonArray.class);
+
         int i = -1;
 
-        for (JsonElement kiteElement : kiteResponse.getAsJsonObject("data").getAsJsonArray("candles")) {
+        for (JsonElement kiteElement : kiteResponseArray.get(0).getAsJsonObject().get("data").getAsJsonObject().get("candles").getAsJsonArray()) {
 
             JsonArray candleDetailsArray = kiteElement.getAsJsonArray();
             Candle candle = Candle.builder().build();
@@ -140,7 +142,7 @@ public class MorningConsumer {
             Basic Lowerband =  (High + Low) / 2 – Multiplier * ATR
         */
         for (int i = index - n; i < index; i++) {
-            Candle candle = candleList.get(index);
+            Candle candle = candleList.get(i);
 
             candle.basicLowerBand = (candle.high + candle.low) / 2 + 10 * candle.atr;
             candle.basicUpperBand = (candle.high + candle.low) / 2 - 10 * candle.atr;
@@ -160,8 +162,8 @@ public class MorningConsumer {
         double finalLowerBand = 0;
         for (int i = index - n; i < index; i++) {
 
-            Candle candle = candleList.get(index);
-            Candle prevCandle = candleList.get(index - 1);
+            Candle candle = candleList.get(i);
+            Candle prevCandle = i > 0 ? candleList.get(i - 1) : Candle.builder().build();
 
             if ((candle.basicUpperBand < prevCandle.finalUpperBand) && (prevCandle.close > prevCandle.finalUpperBand)) {
                 finalUpperBand = candle.basicUpperBand;
@@ -198,7 +200,7 @@ public class MorningConsumer {
                                 Current  Final Lowerband
         */
         for (int i = index - n; i < index; i++) {
-            Candle candle = candleList.get(index);
+            Candle candle = candleList.get(i);
 
             if(candle.close <= candle.finalUpperBand){
                 candle.superTrend = candle.finalUpperBand;
