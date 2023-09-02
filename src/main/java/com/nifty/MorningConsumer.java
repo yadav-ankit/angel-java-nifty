@@ -8,6 +8,7 @@ import com.google.gson.JsonObject;
 import com.nifty.dto.Candle;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -53,6 +54,13 @@ public class MorningConsumer {
             i = -1;
         }
 
+        List<Candle> lastNCandles = getCandlesHelper(candleList);
+
+        return lastNCandles;
+    }
+
+    @NotNull
+    private List<Candle> getCandlesHelper(List<Candle> candleList) {
         int n = 10;
         Collections.reverse(candleList);
 
@@ -79,18 +87,23 @@ public class MorningConsumer {
         lastNCandles.add(tempCandle);
          */
 
-        findTrueRange(lastNCandles);
+        setTrueRange(lastNCandles);
 
         System.out.println(lastNCandles.size());
 
         setAverageTrueRange(lastNCandles, n, 10);
 
-        System.out.println(lastNCandles.size());
+        setBasicBands(lastNCandles, n, 10);
 
+        setFinalBands(lastNCandles, n, 10);
+
+        setSuperTrend(lastNCandles, n, 10);
+
+        System.out.println(lastNCandles.size());
         return lastNCandles;
     }
 
-    private void findTrueRange(List<Candle> lastNCandles) {
+    private void setTrueRange(List<Candle> lastNCandles) {
 
         // true_range = max (h-l,abs(h-pc),abs(l-pc));
 
@@ -118,8 +131,81 @@ public class MorningConsumer {
         for (int i = index - n; i < index; i++) {
             sum = sum + candleList.get(i).tr;
         }
-
         candleList.get(index - 1).atr = (sum / n);
+    }
+
+    private void setBasicBands(List<Candle> candleList, int n, int index) {
+       /*
+            Basic Upperband  =  (High + Low) / 2 + Multiplier * ATR
+            Basic Lowerband =  (High + Low) / 2 – Multiplier * ATR
+        */
+        for (int i = index - n; i < index; i++) {
+            Candle candle = candleList.get(index);
+
+            candle.basicLowerBand = (candle.high + candle.low) / 2 + 10 * candle.atr;
+            candle.basicUpperBand = (candle.high + candle.low) / 2 - 10 * candle.atr;
+        }
+    }
+
+    private void setFinalBands(List<Candle> candleList, int n, int index) {
+       /*
+            Final Upperband = IF( (Current Basic Upperband  < Previous Final Upperband) and
+                                    (Previous Close > Previous Final Upperband))
+                                Then
+                                    (Current Basic Upperband)
+                                ELSE
+                                    (Previous Final Upperband)
+        */
+        double finalUpperBand = 0;
+        double finalLowerBand = 0;
+        for (int i = index - n; i < index; i++) {
+
+            Candle candle = candleList.get(index);
+            Candle prevCandle = candleList.get(index - 1);
+
+            if ((candle.basicUpperBand < prevCandle.finalUpperBand) && (prevCandle.close > prevCandle.finalUpperBand)) {
+                finalUpperBand = candle.basicUpperBand;
+            } else {
+                finalUpperBand = prevCandle.finalUpperBand;
+            }
+            candle.finalUpperBand = finalUpperBand;
+
+
+            /*
+             Final Lowerband = IF( (Current Basic Lowerband  > Previous Final Lowerband)
+                                and (Previous Close < Previous Final Lowerband))
+                                Then
+                                    (Current Basic Lowerband)
+                                 ELSE
+                                    (Previous Final Lowerband)
+             */
+
+            if ((candle.basicLowerBand > prevCandle.finalLowerBand) && (prevCandle.close < prevCandle.finalLowerBand)) {
+                finalLowerBand = candle.basicLowerBand;
+            } else {
+                finalLowerBand = prevCandle.finalLowerBand;
+            }
+            candle.finalLowerBand = finalLowerBand;
+        }
+    }
+
+    private void setSuperTrend(List<Candle> candleList, int n, int index) {
+       /*
+            SUPERTREND = IF(Current Close <= Current Final Upperband )
+                            Then
+                                Current Final Upperband
+                            ELSE
+                                Current  Final Lowerband
+        */
+        for (int i = index - n; i < index; i++) {
+            Candle candle = candleList.get(index);
+
+            if(candle.close <= candle.finalUpperBand){
+                candle.superTrend = candle.finalUpperBand;
+            }else{
+                candle.superTrend = candle.finalLowerBand;
+            }
+        }
     }
 
 

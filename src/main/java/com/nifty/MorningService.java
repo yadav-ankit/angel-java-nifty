@@ -42,7 +42,7 @@ public class MorningService {
     @Value("${morning.url}")
     private String url;
 
-    public List<Candle> createCandlesData(String url) {
+    private List<Candle> createCandlesData(String url) {
 
         List<Candle> candleList = new ArrayList<>();
         HttpEntity<String> request = new HttpEntity<>(new HttpHeaders());

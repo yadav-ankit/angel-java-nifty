@@ -16,4 +16,6 @@ public class Candle {
     public double atr;
     public double finalUpperBand;
     public double finalLowerBand;
+
+    public double superTrend;
 }

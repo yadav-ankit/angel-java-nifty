@@ -14,3 +14,9 @@ If problem comes that smart-api-jar is not found then make ur repo public
 also rename setting.xml for time being.
 
 ==========
+
+SuperTrend
+
+https://tradingtuitions.com/supertrend-indicator-excel-sheet-with-realtime-buy-sell-signals/
+
+https://www.youtube.com/watch?v=L_PvUlP1si8
