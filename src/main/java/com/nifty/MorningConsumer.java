@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.nifty.dto.Candle;
+import com.nifty.util.ServiceUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -114,13 +115,7 @@ public class MorningConsumer {
             double h_pc = Math.abs(currentCandle.high - prevCandle.close);
             double l_pc = Math.abs(currentCandle.low - prevCandle.close);
 
-            double tr = Math.max(h_l, Math.max(h_pc, l_pc));
-
-            tr = tr * 10000;
-            tr = Math.round(tr);
-            tr = tr / 10000;
-
-            currentCandle.tr = tr;
+            currentCandle.tr = ServiceUtil.roundFigure(Math.max(h_l, Math.max(h_pc, l_pc)));
         }
     }
 
@@ -132,11 +127,7 @@ public class MorningConsumer {
             for (int j = i; j >= i - SUPERTREND_LENGTH;  j--) {
                 sum = sum + candleList.get(j).tr;
             }
-            atr = sum / SUPERTREND_LENGTH;
-            atr = atr * 10000;
-            atr = Math.round(atr);
-            atr = atr / 10000;
-            candleList.get(i).atr = atr;
+            candleList.get(i).atr = ServiceUtil.roundFigure(sum / SUPERTREND_LENGTH);
         }
     }
 
@@ -148,8 +139,8 @@ public class MorningConsumer {
         for (int i = index; i<candleList.size();i++) {
             Candle candle = candleList.get(i);
 
-            candle.basicLowerBand = (candle.high + candle.low) / 2 + 10 * candle.atr;
-            candle.basicUpperBand = (candle.high + candle.low) / 2 - 10 * candle.atr;
+            candle.basicUpperBand = ServiceUtil.roundFigure((candle.high + candle.low) / 2 + 10 * candle.atr);
+            candle.basicLowerBand = ServiceUtil.roundFigure((candle.high + candle.low) / 2 - 10 * candle.atr);
         }
     }
 
@@ -202,19 +193,8 @@ public class MorningConsumer {
                 candle.finalLowerBand = finalLowerBand;
             }
 
-            double finalUpper =  candle.finalUpperBand;
-            double finalLower = candle.finalLowerBand;
-
-            finalUpper = finalUpper * 10000;
-            finalUpper = Math.round(finalUpper);
-            finalUpper = finalUpper / 10000;
-
-            finalLower = finalLower * 10000;
-            finalLower = Math.round(finalLower);
-            finalLower = finalLower / 10000;
-
-            candle.finalLowerBand = finalLower;
-            candle.finalUpperBand = finalUpper;
+            candle.finalLowerBand = ServiceUtil.roundFigure(candle.finalLowerBand);
+            candle.finalUpperBand = ServiceUtil.roundFigure(candle.finalUpperBand);
         }
     }
 

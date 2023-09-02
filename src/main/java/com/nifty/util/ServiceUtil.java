@@ -40,6 +40,14 @@ public class ServiceUtil {
         return headers;
     }
 
+    public static double roundFigure(double number){
+        number = number * 10000;
+        number = Math.round(number);
+        number = number / 10000;
+
+        return number;
+    }
+
     private static List<Index> intializeSymbolTokenMap(SmartConnect smartConnect) {
         HttpEntity<String> request = new HttpEntity<>(getHeaders());
 
