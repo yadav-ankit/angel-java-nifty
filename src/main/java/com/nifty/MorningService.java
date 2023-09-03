@@ -4,6 +4,7 @@ import com.angelbroking.smartapi.SmartConnect;
 import com.nifty.angelbroking.AngelConnector;
 import com.nifty.dto.Candle;
 import com.nifty.util.ServiceUtil;
+import com.nifty.util.SuperTrendIndicator;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,11 +17,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import org.springframework.web.util.UriComponentsBuilder;
+import org.ta4j.core.BarSeries;
 
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
+import java.time.ZonedDateTime;
 import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -42,9 +43,8 @@ public class MorningService {
     @Value("${morning.url}")
     private String url;
 
-    private List<Candle> createCandlesData(String url) {
-
-        List<Candle> candleList = new ArrayList<>();
+    private Candle createCandlesData(String url,SuperTrendIndicator superTrendIndicator) {
+        Candle lastCandle = null;
         HttpEntity<String> request = new HttpEntity<>(new HttpHeaders());
 
         UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromHttpUrl(url);
@@ -70,31 +70,30 @@ public class MorningService {
                     String.class
             );
             resource = apiResponse.getBody().toString();
-            candleList = morningConsumer.consume(resource);
+            lastCandle = morningConsumer.consume(resource,superTrendIndicator);
         } catch (Exception e) {
             System.out.println("EXCEPTION WHILE INVOKING API KEY REQUEST : " + e);
         }
-        return candleList;
+        return lastCandle;
     }
 
     public void performIntradayTrading() {
 
-        List<Candle> candleList = createCandlesData(url);
+        SuperTrendIndicator superTrendIndicator = new SuperTrendIndicator();
+        Candle lastCandle = createCandlesData(url,superTrendIndicator);
 
-        int test = 0;
-
-        //startTrading(candleList);
-
+     //   startTrading(superTrendIndicator,lastCandle);
     }
 
-    private void startTrading(List<Candle> candleList) {
+    private void startTrading(SuperTrendIndicator superTrendIndicator,Candle lastCandle) {
         SmartConnect smartConnect = AngelConnector.connectWithAngel();
 
         int n = 10;
 
         /*
-        every 10 seconds start with count = 1...
+        Below code runs every 10 seconds and calculate high/low
         so it runs 6 times in 1 min   ...... 30 times in 5 mins
+        After 5 min ... it creates a new candle with OHLC
          */
 
         AtomicLong startTime = new AtomicLong(System.currentTimeMillis());
@@ -102,18 +101,18 @@ public class MorningService {
 
         AtomicReference<Double> open = new AtomicReference<>();
 
-        if (!candleList.isEmpty() && !isStarted[0]) {
-            open.set(candleList.get(candleList.size() - 1).close);
+        if (!superTrendIndicator.getSeries().isEmpty() && !isStarted[0]) {
+            open.set(lastCandle.close);
         }
 
-        Runnable periodicRunnable = getRunnableInstance(candleList, smartConnect, n, startTime, isStarted, open);
+        Runnable periodicRunnable = getRunnableInstance(superTrendIndicator, smartConnect, n, startTime, isStarted, open);
 
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
         executor.scheduleAtFixedRate(periodicRunnable, 0, 10, TimeUnit.SECONDS);
     }
 
     @NotNull
-    private Runnable getRunnableInstance(List<Candle> candleList, SmartConnect smartConnect, int n, AtomicLong startTime, boolean[] isStarted, AtomicReference<Double> open) {
+    private Runnable getRunnableInstance(SuperTrendIndicator superTrendIndicator, SmartConnect smartConnect, int n, AtomicLong startTime, boolean[] isStarted, AtomicReference<Double> open) {
         AtomicReference<Double> close = new AtomicReference<>();
         AtomicReference<Double> low = new AtomicReference(999999.23);
         AtomicReference<Double> high = new AtomicReference(-999.23);
@@ -143,28 +142,28 @@ public class MorningService {
                             .close(close.get())
                             .build();
 
-                    candleList.add(candle);
-
-                    int size = candleList.size();
-                    candleList.get(size - 1).tr = (serviceUtil.extractTrueRange(candleList, n));
-                    serviceUtil.setAverageTrueRange(candleList, n, size);
+                    BarSeries barSeries = superTrendIndicator.getSeries();
+                    barSeries.addBar(ZonedDateTime.now(), candle.open, candle.high, candle.low, candle.close);
+                    superTrendIndicator.setSeries(barSeries);
 
                     startTime.set(System.currentTimeMillis());
                     open.set(niftyLtp);
 
-                    if (!candleList.isEmpty()) {
-                        Candle printt = candleList.get(candleList.size() - 1);
-                        System.out.println("close " + printt.close);
-                        System.out.println("open " + printt.open);
-                        System.out.println("high " + printt.high);
-                        System.out.println("low " + printt.low);
-                    }
-
+                    printCandleLiveData(candle);
                 }
             } catch (Exception e) {
                 e.printStackTrace();
             }
         };
         return periodicRunnable;
+    }
+
+    private void printCandleLiveData(Candle candle) {
+        if (candle != null) {
+            System.out.println("close " + candle.close);
+            System.out.println("open " + candle.open);
+            System.out.println("high " + candle.high);
+            System.out.println("low " + candle.low);
+        }
     }
 }

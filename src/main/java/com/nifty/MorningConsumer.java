@@ -23,7 +23,7 @@ import java.util.List;
 @Component
 public class MorningConsumer {
 
-    public List<Candle> consume(String message) {
+    public Candle consume(String message,SuperTrendIndicator superTrendIndicator) {
         List<Candle> candleList = new ArrayList<>();
 
         JsonArray kiteResponseArray = message == null ? null :
@@ -60,9 +60,8 @@ public class MorningConsumer {
             i = -1;
         }
         List<Candle> last100Candles = startWith100Candles(candleList);
-        createBarSeries(last100Candles);
-
-        return new ArrayList<>();
+        createBarSeries(last100Candles,superTrendIndicator);
+        return candleList.get(candleList.size()-1);
     }
 
     private List<Candle> startWith100Candles(List<Candle> candleList){
@@ -79,7 +78,7 @@ public class MorningConsumer {
         Collections.reverse(lastNCandles);
         return lastNCandles;
     }
-    private void createBarSeries(List<Candle> candleList) {
+    private BarSeries createBarSeries(List<Candle> candleList,SuperTrendIndicator superTrendIndicator) {
         BarSeries series = new BaseBarSeriesBuilder().withName("my_2023_series").build();
 
         for (Candle candle : candleList) {
@@ -91,8 +90,9 @@ public class MorningConsumer {
             series.addBar(zonedDateTime, candle.open, candle.high, candle.low, candle.close);
         }
 
-        SuperTrendIndicator superTrendIndicator = new SuperTrendIndicator(series);
-
+        superTrendIndicator.setSeries(series);
         superTrendIndicator.getSignal(candleList.size() - 1);
+
+        return series;
     }
 }

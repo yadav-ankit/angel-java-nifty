@@ -28,6 +28,10 @@ public class SuperTrendIndicator {
         this(series, 3.0, 10);
     }
 
+    public SuperTrendIndicator() {
+    }
+
+
     public SuperTrendIndicator(BarSeries series, Double multiplier) {
         this(series, multiplier, 10);
     }
