@@ -76,11 +76,11 @@ public class MorningService {
         SuperTrendIndicator superTrendIndicator = new SuperTrendIndicator();
         Candle lastCandle = createCandlesData(url, superTrendIndicator);
 
-        //   startTrading(superTrendIndicator,lastCandle);
+        startTrading(superTrendIndicator,lastCandle);
     }
 
     private void startTrading(SuperTrendIndicator superTrendIndicator, Candle lastCandle) {
-        SmartConnect smartConnect = AngelConnector.connectWithAngel();
+       // SmartConnect smartConnect = AngelConnector.connectWithAngel();
 
         final boolean[] isStarted = {false};
 
@@ -96,8 +96,10 @@ public class MorningService {
             After 5 min ... it creates a new candle with OHLC and add it to BarSeries
          */
 
-        FetchAndUpdateCandlesTask task = new FetchAndUpdateCandlesTask(new AtomicLong(System.currentTimeMillis()),
-                superTrendIndicator, smartConnect, isStarted, open);
+        AtomicLong startTime = new AtomicLong(System.currentTimeMillis());
+
+        FetchAndUpdateCandlesTask task = new FetchAndUpdateCandlesTask(startTime,
+                superTrendIndicator, null, isStarted, open);
 
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 

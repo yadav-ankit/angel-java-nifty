@@ -61,7 +61,7 @@ public class MorningConsumer {
         }
         List<Candle> last100Candles = startWith100Candles(candleList);
         createBarSeries(last100Candles,superTrendIndicator);
-        return candleList.get(candleList.size()-1);
+        return last100Candles.get(last100Candles.size()-1);
     }
 
     private List<Candle> startWith100Candles(List<Candle> candleList){
@@ -91,6 +91,8 @@ public class MorningConsumer {
         }
 
         superTrendIndicator.setSeries(series);
+        superTrendIndicator.setLength(10); superTrendIndicator.setMultiplier(3.0);
+        superTrendIndicator.calculate();
         superTrendIndicator.getSignal(candleList.size() - 1);
 
         return series;

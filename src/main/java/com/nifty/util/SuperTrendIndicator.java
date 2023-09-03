@@ -36,7 +36,7 @@ public class SuperTrendIndicator {
         this(series, multiplier, 10);
     }
 
-    private void calculate() {
+    public void calculate() {
         setAtri(new ATRIndicator(getSeries(), getLength()));
         values = new Vector<>(series.getBarCount());
         upperBands = new Vector<>(series.getBarCount());

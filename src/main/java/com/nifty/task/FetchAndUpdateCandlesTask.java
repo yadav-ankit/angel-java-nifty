@@ -37,7 +37,7 @@ public class FetchAndUpdateCandlesTask implements Runnable {
         AtomicReference<Double> low = new AtomicReference(999999.23);
         AtomicReference<Double> high = new AtomicReference(-999.23);
         try {
-            String ltp = AngelConnector.getNiftyltp(smartConnect);
+            String ltp = "19423.88";//AngelConnector.getNiftyltp(smartConnect);
 
             double niftyLtp = Double.parseDouble(ltp);
 
@@ -49,7 +49,7 @@ public class FetchAndUpdateCandlesTask implements Runnable {
                 low.set(Math.min(niftyLtp, low.get()));
             }
 
-            if (System.currentTimeMillis() - startTime.get() >= 300000) {
+            if (System.currentTimeMillis() - startTime.get() >= 30000) {
                 close.set(niftyLtp);
 
                 Candle candle = Candle.builder()
@@ -61,7 +61,10 @@ public class FetchAndUpdateCandlesTask implements Runnable {
 
                 BarSeries barSeries = superTrendIndicator.getSeries();
                 barSeries.addBar(ZonedDateTime.now(), candle.open, candle.high, candle.low, candle.close);
+
                 superTrendIndicator.setSeries(barSeries);
+                superTrendIndicator.setLength(10); superTrendIndicator.setMultiplier(3.0);
+                superTrendIndicator.calculate();
 
                 startTime.set(System.currentTimeMillis());
                 open.set(niftyLtp);
