@@ -21,8 +21,7 @@ import java.util.concurrent.atomic.AtomicReference;
 @Slf4j
 public class FetchAndUpdateCandlesTask implements Runnable {
 
-    @Autowired
-    ServiceUtil serviceUtil;
+    private final ServiceUtil serviceUtil;
 
     private final AtomicLong startTime;
 
@@ -38,12 +37,14 @@ public class FetchAndUpdateCandlesTask implements Runnable {
     AtomicReference<Double> high = new AtomicReference(-999.23);
 
     public FetchAndUpdateCandlesTask(AtomicLong startTime, SuperTrendIndicator superTrendIndicator,
-                                     SmartConnect smartConnect, boolean[] isStarted, AtomicReference<Double> open) {
+                                     SmartConnect smartConnect, boolean[] isStarted, AtomicReference<Double> open
+                                     ,ServiceUtil serviceUtil) {
         this.startTime = startTime;
         this.superTrendIndicator = superTrendIndicator;
         this.smartConnect = smartConnect;
         this.isStarted = isStarted;
         this.open = open;
+        this.serviceUtil = serviceUtil;
     }
 
     @Override
@@ -117,11 +118,12 @@ public class FetchAndUpdateCandlesTask implements Runnable {
     private void checkAndtakeActualTrade(){
         List<Index> indexList =  serviceUtil.intializeSymbolTokenMap(smartConnect);
 
-        Index strikePriceToTrade = serviceUtil.getNearestPremiumMatched(indexList);
+      //  Index strikePriceToTrade = serviceUtil.getNearestPremiumMatched(indexList);
 
         OrderParams orderParams = new OrderParams();
-        orderParams.symbolToken = strikePriceToTrade.getToken();
-        orderParams.tradingsymbol = strikePriceToTrade.getSymbol();
+        orderParams.symbolToken =   "45037"; //strikePriceToTrade.getToken();
+        orderParams.symboltoken =  "45037"; //strikePriceToTrade.getToken();
+        orderParams.tradingsymbol =   "NIFTY07SEP2319700CE"; //strikePriceToTrade.getSymbol();
 
         if(superTrendIndicator.getSignal(superTrendIndicator.getSeries().getBarCount() - 1).equals("")){
 

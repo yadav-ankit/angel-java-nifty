@@ -2,6 +2,7 @@ package com.nifty.util;
 
 import com.angelbroking.smartapi.SmartConnect;
 import com.google.gson.*;
+import com.nifty.angelbroking.AngelConnector;
 import com.nifty.dto.Candle;
 import com.trading.Index;
 import lombok.extern.slf4j.Slf4j;
@@ -120,10 +121,10 @@ public class ServiceUtil {
 
         String currStrikePriceString = null;
 
-        //  currStrikePriceString = getNiftyltp(smartConnect);
+          currStrikePriceString = AngelConnector.getNiftyltp(smartConnect);
 
         int currStrikePrice = (currStrikePriceString == null || "".equals(currStrikePriceString))
-                ? Integer.parseInt(System.getenv("CURR_STRIKE_PRICE")) : Integer.parseInt(currStrikePriceString);
+                ? Integer.parseInt(System.getenv("CURR_STRIKE_PRICE")) : (int) Double.parseDouble(currStrikePriceString);
 
 
         // filter out only top 5 & last 5 strike prices 17500 - 18500
@@ -161,6 +162,14 @@ public class ServiceUtil {
         optionsList.add(a); optionsList.add(b); optionsList.add(c); optionsList.add(d); optionsList.add(e);
 
         Index ans = null;//getNearestPremiumMatched(optionsList);
+
+
+        String x =  "19457.85";
+
+        int dd = (int) Double.parseDouble(x);
+
+        System.out.println(dd);
+
     }
 
     public Index getNearestPremiumMatched(List<Index> optionsList) {
@@ -205,7 +214,7 @@ public class ServiceUtil {
                 % 365;
 
         // 0-6 (current week) | 7-13(next week) | 14-20 (next to next week)
-        return ((daysToExpire + 1) <= 20);
+        return ((daysToExpire + 1) <= 6);
     }
 
     public List<Candle> extractLastNCandles(List<Candle> candleList, int n) {

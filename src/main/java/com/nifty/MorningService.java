@@ -34,6 +34,9 @@ import java.util.concurrent.atomic.AtomicReference;
 public class MorningService {
 
     @Autowired
+    ServiceUtil serviceUtil;
+
+    @Autowired
     AngelConnector angelConnector;
 
     @Autowired
@@ -100,12 +103,13 @@ public class MorningService {
             Below code runs every 10 seconds and calculate high/low,
             so it runs 6 times in 1 min   ...... 30 times in 5 mins
             After 5 min ... it creates a new candle with OHLC and add it to BarSeries
-         */
+
+            */
 
         AtomicLong startTime = new AtomicLong(System.currentTimeMillis());
 
         FetchAndUpdateCandlesTask task = new FetchAndUpdateCandlesTask(startTime,
-                superTrendIndicator, smartConnect, isStarted, open);
+                superTrendIndicator, smartConnect, isStarted, open,serviceUtil);
 
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
