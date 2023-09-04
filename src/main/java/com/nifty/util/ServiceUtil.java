@@ -3,7 +3,6 @@ package com.nifty.util;
 import com.angelbroking.smartapi.SmartConnect;
 import com.google.gson.*;
 import com.nifty.angelbroking.AngelConnector;
-import com.nifty.dto.Candle;
 import com.trading.Index;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -29,6 +28,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ServiceUtil {
 
+    public String niftyLtp;
+
     private static HttpHeaders getHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.COOKIE, "AWSALBAPP-0=_remove_; AWSALBAPP-1=_remove_; AWSALBAPP-2=_remove_; AWSALBAPP-3=_remove_; AWSALB=2W/GV5RHWOnI1eKt8uaZZGlniavOP19H51ajcdACjRFKUYg1pXtMdosTOJYBMUm5+t7gFPQCFoYTeyXiJ3BXMHmdNqTcb7RnnW+S6BJaaay0rQtaJbdMrb8ii5NN; AWSALBAPP-0=_remove_; AWSALBAPP-1=_remove_; AWSALBAPP-2=_remove_; AWSALBAPP-3=_remove_; AWSALBCORS=2W/GV5RHWOnI1eKt8uaZZGlniavOP19H51ajcdACjRFKUYg1pXtMdosTOJYBMUm5+t7gFPQCFoYTeyXiJ3BXMHmdNqTcb7RnnW+S6BJaaay0rQtaJbdMrb8ii5NN");
@@ -40,7 +41,7 @@ public class ServiceUtil {
         return headers;
     }
 
-    public static double roundFigure(double number){
+    public static double roundFigure(double number) {
         number = number * 10000;
         number = Math.round(number);
         number = number / 10000;
@@ -48,7 +49,57 @@ public class ServiceUtil {
         return number;
     }
 
-    public static List<Index> intializeSymbolTokenMap(SmartConnect smartConnect) {
+    public static void main(String[] args) {
+        List<Index> optionsList = new ArrayList<>();
+        Index a = new Index();
+        a.setLtp("23.33");
+        Index b = new Index();
+        b.setLtp("12.01");
+        Index c = new Index();
+        c.setLtp("15.33");
+        Index d = new Index();
+        d.setLtp("3.23");
+        Index e = new Index();
+        e.setLtp("18.33");
+        optionsList.add(a);
+        optionsList.add(b);
+        optionsList.add(c);
+        optionsList.add(d);
+        optionsList.add(e);
+
+        Index ans = null;//getNearestPremiumMatched(optionsList);
+    }
+
+    private static String getSingleData(JsonElement angelElement, String byName) {
+        return initializeParams(((JsonObject) angelElement).get(byName));
+    }
+
+    private static String initializeParams(JsonElement element) {
+        return element == null || element instanceof JsonNull ? "" : element.getAsString();
+    }
+
+    private static Date formatToUTCTime(String timeStamp) throws ParseException {
+        SimpleDateFormat dateParser = new SimpleDateFormat("ddMMMyyyy");
+        return dateParser.parse(timeStamp);
+    }
+
+    private static boolean isValidExpiry(Date expiry) {
+
+        Date today = new Date();
+
+        long difference_In_Time
+                = expiry.getTime() - today.getTime();
+
+        long daysToExpire
+                = (difference_In_Time
+                / (1000 * 60 * 60 * 24))
+                % 365;
+
+        // 0-6 (current week) | 7-13(next week) | 14-20 (next to next week)
+        return ((daysToExpire + 1) <= 6);
+    }
+
+    public List<Index> intializeSymbolTokenMap(SmartConnect smartConnect) {
         HttpEntity<String> request = new HttpEntity<>(getHeaders());
 
         String url = "https://margincalculator.angelbroking.com/OpenAPI_File/files/OpenAPIScripMaster.json";
@@ -84,7 +135,7 @@ public class ServiceUtil {
         return businessLogic(resource, smartConnect);
     }
 
-    private static List<Index> businessLogic(String resource, SmartConnect smartConnect) {
+    private List<Index> businessLogic(String resource, SmartConnect smartConnect) {
         JsonArray angelIndexArray = resource == null ? null :
                 StringUtils.isBlank(resource) ?
                         null : new Gson().fromJson(resource, JsonArray.class);
@@ -120,7 +171,8 @@ public class ServiceUtil {
 
         String currStrikePriceString = null;
 
-          currStrikePriceString = AngelConnector.getNiftyltp(smartConnect);
+        currStrikePriceString = AngelConnector.getNiftyltp(smartConnect);
+        this.niftyLtp = currStrikePriceString;
 
         int currStrikePrice = (currStrikePriceString == null || "".equals(currStrikePriceString))
                 ? Integer.parseInt(System.getenv("CURR_STRIKE_PRICE")) : (int) Double.parseDouble(currStrikePriceString);
@@ -151,63 +203,22 @@ public class ServiceUtil {
         return finalList;
     }
 
-    public static void main(String[] args) {
-        List<Index> optionsList = new ArrayList<>();
-        Index a = new Index(); a.setLtp("23.33");
-        Index b = new Index(); b.setLtp("12.01");
-        Index c = new Index(); c.setLtp("15.33");
-        Index d = new Index(); d.setLtp("3.23");
-        Index e = new Index(); e.setLtp("18.33");
-        optionsList.add(a); optionsList.add(b); optionsList.add(c); optionsList.add(d); optionsList.add(e);
-
-        Index ans = null;//getNearestPremiumMatched(optionsList);
-    }
-
-    public Index getNearestPremiumMatched(List<Index> optionsList) {
-        double premium = 10.00;
-        double mini = 100000000.00;
+    public Index getAtleastPointsAwayFromATM(List<Index> optionsList, String optionType,int min_distance_from_atm) {
+        int mini = 100000000;
         Index answerElement = null;
 
-        //  8  23   19   14
         for (Index ele : optionsList) {
-            double temp = Math.abs(Double.parseDouble(ele.getLtp()) - premium);
-            if (temp < mini) {
-                answerElement = ele;
-                mini = temp;
+            String sym = ele.getSymbol();
+            if (sym.contains(optionType)) {
+                int kitnaDuur = Math.abs(ele.getStrike() - (int) Double.parseDouble(niftyLtp));
+                if (Math.abs(kitnaDuur - min_distance_from_atm) < mini) {
+                    answerElement = ele;
+                    mini = Math.abs(kitnaDuur - min_distance_from_atm);
+                }
             }
         }
         return answerElement;
     }
-
-    private static String getSingleData(JsonElement angelElement, String byName) {
-        return initializeParams(((JsonObject) angelElement).get(byName));
-    }
-
-    private static String initializeParams(JsonElement element) {
-        return element == null || element instanceof JsonNull ? "" : element.getAsString();
-    }
-
-    private static Date formatToUTCTime(String timeStamp) throws ParseException {
-        SimpleDateFormat dateParser = new SimpleDateFormat("ddMMMyyyy");
-        return dateParser.parse(timeStamp);
-    }
-
-    private static boolean isValidExpiry(Date expiry) {
-
-        Date today = new Date();
-
-        long difference_In_Time
-                = expiry.getTime() - today.getTime();
-
-        long daysToExpire
-                = (difference_In_Time
-                / (1000 * 60 * 60 * 24))
-                % 365;
-
-        // 0-6 (current week) | 7-13(next week) | 14-20 (next to next week)
-        return ((daysToExpire + 1) <= 6);
-    }
-
 
     public boolean isTimeInBetween(String startTime, String endTime, String checkTime) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.US);
@@ -224,7 +235,7 @@ public class ServiceUtil {
         } else if (checkLocalTime.isAfter(startLocalTime) || checkLocalTime.isBefore(endLocalTime)) {
             isInBetween = true;
         }
-       return isInBetween;
+        return isInBetween;
     }
 
 

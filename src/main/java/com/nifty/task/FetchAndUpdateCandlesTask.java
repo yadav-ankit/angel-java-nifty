@@ -9,14 +9,12 @@ import com.nifty.util.ServiceUtil;
 import com.nifty.util.SuperTrendIndicator;
 import com.trading.Index;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.ta4j.core.BarSeries;
 
 import java.text.SimpleDateFormat;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -40,7 +38,7 @@ public class FetchAndUpdateCandlesTask implements Runnable {
 
     public FetchAndUpdateCandlesTask(AtomicLong startTime, SuperTrendIndicator superTrendIndicator,
                                      SmartConnect smartConnect, boolean[] isStarted, AtomicReference<Double> open
-                                     ,ServiceUtil serviceUtil) {
+            , ServiceUtil serviceUtil) {
         this.startTime = startTime;
         this.superTrendIndicator = superTrendIndicator;
         this.smartConnect = smartConnect;
@@ -56,12 +54,12 @@ public class FetchAndUpdateCandlesTask implements Runnable {
         SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
         String currentTime = dateFormat.format(date);
 
-        if(serviceUtil.isTimeInBetween("09:15:00","15:20:00",currentTime)){
+        if (serviceUtil.isTimeInBetween("09:15:00", "15:20:00", currentTime)) {
             executeRun();
         }
     }
 
-    private void executeRun(){
+    private void executeRun() {
         AtomicReference<Double> close = new AtomicReference<>();
         try {
             String ltp = AngelConnector.getNiftyltp(smartConnect);
@@ -82,8 +80,8 @@ public class FetchAndUpdateCandlesTask implements Runnable {
                 isStarted[0] = true;
             } else {
                 //high.set(Math.max(niftyLtp, high.get()));
-                high.set(Math.max(open.get(),Math.max(niftyLtp, high.get())));
-                low.set(Math.min(open.get(),Math.min(niftyLtp, low.get())));
+                high.set(Math.max(open.get(), Math.max(niftyLtp, high.get())));
+                low.set(Math.min(open.get(), Math.min(niftyLtp, low.get())));
             }
 
             if (System.currentTimeMillis() - startTime.get() >= 20000) {
@@ -102,7 +100,8 @@ public class FetchAndUpdateCandlesTask implements Runnable {
                 barSeries.addBar(ZonedDateTime.now(), candle.open, candle.high, candle.low, candle.close);
 
                 superTrendIndicator.setSeries(barSeries);
-                superTrendIndicator.setLength(10); superTrendIndicator.setMultiplier(3.0);
+                superTrendIndicator.setLength(10);
+                superTrendIndicator.setMultiplier(3.0);
                 superTrendIndicator.calculate();
 
                 startTime.set(System.currentTimeMillis());
@@ -115,6 +114,7 @@ public class FetchAndUpdateCandlesTask implements Runnable {
             e.printStackTrace();
         }
     }
+
     private void printCandleLiveData(Candle candle) {
         if (candle != null) {
             log.info("close " + candle.close);
@@ -126,21 +126,25 @@ public class FetchAndUpdateCandlesTask implements Runnable {
     }
 
 
-    private void checkAndtakeActualTrade(){
-        List<Index> indexList =  serviceUtil.intializeSymbolTokenMap(smartConnect);
+    private void checkAndtakeActualTrade() {
+        List<Index> indexList = serviceUtil.intializeSymbolTokenMap(smartConnect);
 
-      //  Index strikePriceToTrade = serviceUtil.getNearestPremiumMatched(indexList);
+        int length = superTrendIndicator.getSeries().getBarCount();
+        String optionType = Double.parseDouble(serviceUtil.niftyLtp) > superTrendIndicator.getValue(length - 1)
+                ? "PE" : "CE";
+
+        Index strikePriceToTrade = serviceUtil.getAtleastPointsAwayFromATM(indexList, optionType, 400);
 
         OrderParams orderParams = new OrderParams();
-        orderParams.symbolToken =   "45037"; //strikePriceToTrade.getToken();
-        orderParams.symboltoken =  "45037"; //strikePriceToTrade.getToken();
-        orderParams.tradingsymbol =   "NIFTY07SEP2319700CE"; //strikePriceToTrade.getSymbol();
+        orderParams.symbolToken = strikePriceToTrade.getToken();
+        orderParams.symboltoken = strikePriceToTrade.getToken();
+        orderParams.tradingsymbol = strikePriceToTrade.getSymbol();
         orderParams.quantity = 100;
 
-        if(superTrendIndicator.getSignal(superTrendIndicator.getSeries().getBarCount() - 1).equals("")){
-            try{
-                AngelConnector.placeOrder(smartConnect,orderParams);
-            }catch (Exception | SmartAPIException e){
+        if (superTrendIndicator.getSignal(superTrendIndicator.getSeries().getBarCount() - 1).equals("")) {
+            try {
+                AngelConnector.placeOrder(smartConnect, orderParams);
+            } catch (Exception | SmartAPIException e) {
                 e.printStackTrace();
             }
         }
