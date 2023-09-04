@@ -203,17 +203,26 @@ public class ServiceUtil {
         return finalList;
     }
 
-    public Index getAtleastPointsAwayFromATM(List<Index> optionsList, String optionType,int min_distance_from_atm) {
+    public Index getAtleastPointsAwayFromATM(List<Index> optionsList, String optionType, int min_distance_from_atm) {
         int mini = 100000000;
         Index answerElement = null;
-
+        optionType= "CE";
         for (Index ele : optionsList) {
             String sym = ele.getSymbol();
             if (sym.contains(optionType)) {
-                int kitnaDuur = Math.abs(ele.getStrike() - (int) Double.parseDouble(niftyLtp));
-                if (Math.abs(kitnaDuur - min_distance_from_atm) < mini) {
-                    answerElement = ele;
-                    mini = Math.abs(kitnaDuur - min_distance_from_atm);
+
+                if (optionType.equals("PE") && ele.getStrike() < (int) Double.parseDouble(niftyLtp)) {
+                    int kitnaDuur = Math.abs(ele.getStrike() - (int) Double.parseDouble(niftyLtp));
+                    if (Math.abs(kitnaDuur - min_distance_from_atm) < mini) {
+                        answerElement = ele;
+                        mini = Math.abs(kitnaDuur - min_distance_from_atm);
+                    }
+                } else if (optionType.equals("CE") && ele.getStrike() > (int) Double.parseDouble(niftyLtp)) {
+                    int kitnaDuur = Math.abs(ele.getStrike() - (int) Double.parseDouble(niftyLtp));
+                    if (Math.abs(kitnaDuur - min_distance_from_atm) < mini) {
+                        answerElement = ele;
+                        mini = Math.abs(kitnaDuur - min_distance_from_atm);
+                    }
                 }
             }
         }

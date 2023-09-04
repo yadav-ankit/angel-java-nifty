@@ -75,6 +75,8 @@ public class FetchAndUpdateCandlesTask implements Runnable {
                 System.out.println("random no is = " + niftyLtp);
              */
 
+            takeFirstTrade();
+
             if (isStarted[0]) {
                 open.set(niftyLtp);
                 isStarted[0] = true;
@@ -141,7 +143,37 @@ public class FetchAndUpdateCandlesTask implements Runnable {
         orderParams.tradingsymbol = strikePriceToTrade.getSymbol();
         orderParams.quantity = 100;
 
+        // in PROD ..change this to != ""
         if (superTrendIndicator.getSignal(superTrendIndicator.getSeries().getBarCount() - 1).equals("")) {
+            try {
+                AngelConnector.placeOrder(smartConnect, orderParams);
+            } catch (Exception | SmartAPIException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private void takeFirstTrade() {
+        List<Index> indexList = serviceUtil.intializeSymbolTokenMap(smartConnect);
+
+        int length = superTrendIndicator.getSeries().getBarCount();
+        String optionType = Double.parseDouble(serviceUtil.niftyLtp) > superTrendIndicator.getValue(length - 1)
+                ? "PE" : "CE";
+
+        Index strikePriceToTrade = serviceUtil.getAtleastPointsAwayFromATM(indexList, optionType, 400);
+
+        OrderParams orderParams = new OrderParams();
+        orderParams.symbolToken = strikePriceToTrade.getToken();
+        orderParams.symboltoken = strikePriceToTrade.getToken();
+        orderParams.tradingsymbol = strikePriceToTrade.getSymbol();
+        orderParams.quantity = 100;
+
+        // if it is 9 25
+        Date date = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+        String currentTime = dateFormat.format(date);
+
+        if(smartConnect.getPosition().get("data").equals(null) && serviceUtil.isTimeInBetween("09:25:00", "09:29:00", currentTime)){
             try {
                 AngelConnector.placeOrder(smartConnect, orderParams);
             } catch (Exception | SmartAPIException e) {
