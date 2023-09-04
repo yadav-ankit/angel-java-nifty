@@ -13,15 +13,6 @@ import org.springframework.stereotype.Service;
 @Service
 public class AngelConnector {
 
-    @Value("${angel.url}")
-    private String pass;
-
-    @Value("${angel.url}")
-    private String secretKey;
-
-    @Value("${angel.url}")
-    private String apiKey;
-
     public static SmartConnect connectWithAngel() {
         SmartConnect smartConnect = new SmartConnect();
 
@@ -36,7 +27,7 @@ public class AngelConnector {
             }
         });
 
-        User user = smartConnect.generateSession("A844782", "", getTOTPCode("1ff1b793-a7b1-4f4a-b8c5-e6e5c7837a31"));
+        User user = smartConnect.generateSession("A844782", "9725", getTOTPCode("4TLPUQ4SFZKRXMEYSFRBKGKFOY"));
 
         String feedToken = user.getFeedToken();
         System.out.println(feedToken);

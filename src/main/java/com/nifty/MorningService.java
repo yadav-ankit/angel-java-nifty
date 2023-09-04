@@ -83,7 +83,7 @@ public class MorningService {
     }
 
     private void startTrading(SuperTrendIndicator superTrendIndicator, Candle lastCandle) {
-       // SmartConnect smartConnect = AngelConnector.connectWithAngel();
+        SmartConnect smartConnect = AngelConnector.connectWithAngel();
 
         final boolean[] isStarted = {false};
 
@@ -102,7 +102,7 @@ public class MorningService {
         AtomicLong startTime = new AtomicLong(System.currentTimeMillis());
 
         FetchAndUpdateCandlesTask task = new FetchAndUpdateCandlesTask(startTime,
-                superTrendIndicator, null, isStarted, open);
+                superTrendIndicator, smartConnect, isStarted, open);
 
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 

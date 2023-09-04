@@ -41,16 +41,18 @@ public class FetchAndUpdateCandlesTask implements Runnable {
     public void run() {
         AtomicReference<Double> close = new AtomicReference<>();
         try {
-            String ltp = "19423.88";//AngelConnector.getNiftyltp(smartConnect);
+            String ltp = AngelConnector.getNiftyltp(smartConnect);
 
             double niftyLtp = Double.parseDouble(ltp);
 
             // comment below 5 lines for production
-            Random random = new Random();
-            double lowt = 19420.44;
-            double hight = 19500.33;
-            niftyLtp= lowt + (hight - lowt) * random.nextDouble();
-            System.out.println("random no is = " + niftyLtp);
+            /*
+                Random random = new Random();
+                double lowt = 19420.44;
+                double hight = 19500.33;
+                niftyLtp= lowt + (hight - lowt) * random.nextDouble();
+                System.out.println("random no is = " + niftyLtp);
+             */
 
             if (isStarted[0]) {
                 open.set(niftyLtp);
@@ -61,7 +63,7 @@ public class FetchAndUpdateCandlesTask implements Runnable {
                 low.set(Math.min(open.get(),Math.min(niftyLtp, low.get())));
             }
 
-            if (System.currentTimeMillis() - startTime.get() >= 30000) {
+            if (System.currentTimeMillis() - startTime.get() >= 300000) {
                 log.info("5 minutes over ..new candle formed");
 
                 close.set(niftyLtp);
