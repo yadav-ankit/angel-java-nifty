@@ -5,6 +5,7 @@ import com.nifty.angelbroking.AngelConnector;
 import com.nifty.dto.Candle;
 import com.nifty.task.FetchAndUpdateCandlesTask;
 import com.nifty.util.SuperTrendIndicator;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -26,6 +27,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Service
+@Slf4j
 public class MorningService {
 
     @Autowired
@@ -74,8 +76,9 @@ public class MorningService {
     public void performIntradayTrading() {
 
         SuperTrendIndicator superTrendIndicator = new SuperTrendIndicator();
+        log.info("App started ..fetching last day data");
         Candle lastCandle = createCandlesData(url, superTrendIndicator);
-
+        log.info("last day data fetched.. closed at = " , lastCandle.close);
         startTrading(superTrendIndicator,lastCandle);
     }
 

@@ -4,6 +4,7 @@ import com.angelbroking.smartapi.SmartConnect;
 import com.nifty.angelbroking.AngelConnector;
 import com.nifty.dto.Candle;
 import com.nifty.util.SuperTrendIndicator;
+import lombok.extern.slf4j.Slf4j;
 import org.ta4j.core.BarSeries;
 
 import java.time.ZonedDateTime;
@@ -11,6 +12,7 @@ import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
+@Slf4j
 public class FetchAndUpdateCandlesTask implements Runnable {
 
     private final AtomicLong startTime;
@@ -60,6 +62,8 @@ public class FetchAndUpdateCandlesTask implements Runnable {
             }
 
             if (System.currentTimeMillis() - startTime.get() >= 30000) {
+                log.info("5 minutes over ..new candle formed");
+
                 close.set(niftyLtp);
 
                 Candle candle = Candle.builder()
@@ -89,11 +93,11 @@ public class FetchAndUpdateCandlesTask implements Runnable {
 
     private void printCandleLiveData(Candle candle) {
         if (candle != null) {
-            System.out.println("close " + candle.close);
-            System.out.println("open " + candle.open);
-            System.out.println("high " + candle.high);
-            System.out.println("low " + candle.low);
-            System.out.println("------------------");
+            log.info("close " + candle.close);
+            log.info("open " + candle.open);
+            log.info("high " + candle.high);
+            log.info("low " + candle.low);
+            log.info("------------------");
         }
     }
 }
