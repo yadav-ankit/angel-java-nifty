@@ -151,6 +151,35 @@ public class ServiceUtil {
         return finalList;
     }
 
+    public static void main(String[] args) {
+        List<Index> optionsList = new ArrayList<>();
+        Index a = new Index(); a.setLtp("23.33");
+        Index b = new Index(); b.setLtp("12.01");
+        Index c = new Index(); c.setLtp("15.33");
+        Index d = new Index(); d.setLtp("3.23");
+        Index e = new Index(); e.setLtp("18.33");
+        optionsList.add(a); optionsList.add(b); optionsList.add(c); optionsList.add(d); optionsList.add(e);
+
+        Index ans = getNearestPremiumMatched(optionsList);
+        System.out.println(ans.getLtp());
+    }
+
+    private static Index getNearestPremiumMatched(List<Index> optionsList) {
+        double premium = 10.00;
+        double mini = 100000000.00;
+        Index answerElement = null;
+
+        //  8  23   19   14
+        for (Index ele : optionsList) {
+            double temp = Math.abs(Double.parseDouble(ele.getLtp()) - premium);
+            if (temp < mini) {
+                answerElement = ele;
+                mini = temp;
+            }
+        }
+        return answerElement;
+    }
+
     private static String getSingleData(JsonElement angelElement, String byName) {
         return initializeParams(((JsonObject) angelElement).get(byName));
     }
@@ -176,7 +205,7 @@ public class ServiceUtil {
                 / (1000 * 60 * 60 * 24))
                 % 365;
 
-        // 0-6 | 7-13 | 14-20
+        // 0-6 (current week) | 7-13(next week) | 14-20 (next to next week)
         return ((daysToExpire + 1) <= 20);
     }
 
@@ -193,42 +222,6 @@ public class ServiceUtil {
             finalCandles.add(candleList.get(i));
         }
         return finalCandles;
-    }
-
-    public double extractTrueRange(List<Candle> candleList, int n) {
-
-        // true_range = max (h-l,abs(h-pc),abs(l-pc));
-
-        List<Candle> lastNCandles = extractLastNCandles(candleList, n);
-
-        double trueRange = 0;
-        for (int i = 1; i < lastNCandles.size(); i++) {
-            Candle currentCandle = lastNCandles.get(i);
-            Candle prevCandle = lastNCandles.get(i - 1);
-
-            double h_l = currentCandle.high - currentCandle.low;
-            double h_pc = Math.abs(currentCandle.high - prevCandle.close);
-            double l_pc = Math.abs(currentCandle.low - prevCandle.close);
-
-            double tr = Math.max(h_l, Math.max(h_pc, l_pc));
-
-            tr = tr * 10000;
-            tr = Math.round(tr);
-            tr = tr / 10000;
-
-            trueRange = tr;
-        }
-        return trueRange;
-    }
-
-    public void setAverageTrueRange(List<Candle> candleList, int n, int index) {
-        double sum = 0;
-
-        for (int i = index - n; i < index; i++) {
-            sum = sum + candleList.get(i).atr;
-        }
-
-        candleList.get(index - 1).atr = (sum / n);
     }
 
     private void unusedMethod() {
