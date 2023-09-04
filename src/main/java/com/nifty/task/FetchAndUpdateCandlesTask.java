@@ -56,6 +56,8 @@ public class FetchAndUpdateCandlesTask implements Runnable {
 
         if (serviceUtil.isTimeInBetween("09:15:00", "15:20:00", currentTime)) {
             executeRun();
+        }else{
+            // exit all positions
         }
     }
 
@@ -145,6 +147,7 @@ public class FetchAndUpdateCandlesTask implements Runnable {
 
         // in PROD ..change this to != ""
         if (superTrendIndicator.getSignal(superTrendIndicator.getSeries().getBarCount() - 1).equals("")) {
+            // first exit all Positions
             try {
                 AngelConnector.placeOrder(smartConnect, orderParams);
             } catch (Exception | SmartAPIException e) {
