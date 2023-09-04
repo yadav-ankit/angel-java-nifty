@@ -19,6 +19,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.DayOfWeek;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -245,6 +246,24 @@ public class ServiceUtil {
             isInBetween = true;
         }
         return isInBetween;
+    }
+
+
+    public int getDistanceFromATM(DayOfWeek day){
+
+        switch (day){
+            case THURSDAY:
+                return 200;
+            case FRIDAY:
+                return 500;
+            case MONDAY:
+                return 400;
+            case TUESDAY:
+                return 300;
+            case WEDNESDAY:
+                return 200;
+        }
+        return 300;
     }
 
 

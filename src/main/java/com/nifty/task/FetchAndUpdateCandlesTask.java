@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.ta4j.core.BarSeries;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.List;
@@ -136,8 +137,8 @@ public class FetchAndUpdateCandlesTask implements Runnable {
         int length = superTrendIndicator.getSeries().getBarCount();
         String optionType = Double.parseDouble(serviceUtil.niftyLtp) > superTrendIndicator.getValue(length - 1)
                 ? "PE" : "CE";
-
-        Index strikePriceToTrade = serviceUtil.getAtleastPointsAwayFromATM(indexList, optionType, 400);
+        int distance_from_atm = serviceUtil.getDistanceFromATM(LocalDate.now().getDayOfWeek());
+        Index strikePriceToTrade = serviceUtil.getAtleastPointsAwayFromATM(indexList, optionType, distance_from_atm);
 
         OrderParams orderParams = new OrderParams();
         orderParams.symbolToken = strikePriceToTrade.getToken();
@@ -163,7 +164,8 @@ public class FetchAndUpdateCandlesTask implements Runnable {
         String optionType = Double.parseDouble(serviceUtil.niftyLtp) > superTrendIndicator.getValue(length - 1)
                 ? "PE" : "CE";
 
-        Index strikePriceToTrade = serviceUtil.getAtleastPointsAwayFromATM(indexList, optionType, 400);
+        int distance_from_atm = serviceUtil.getDistanceFromATM(LocalDate.now().getDayOfWeek());
+        Index strikePriceToTrade = serviceUtil.getAtleastPointsAwayFromATM(indexList, optionType, distance_from_atm);
 
         OrderParams orderParams = new OrderParams();
         orderParams.symbolToken = strikePriceToTrade.getToken();
