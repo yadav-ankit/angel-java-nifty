@@ -2,13 +2,16 @@ package com.nifty.task;
 
 import com.angelbroking.smartapi.SmartConnect;
 import com.angelbroking.smartapi.http.exceptions.SmartAPIException;
+import com.angelbroking.smartapi.models.Order;
 import com.angelbroking.smartapi.models.OrderParams;
 import com.nifty.angelbroking.AngelConnector;
 import com.nifty.dto.Candle;
+import com.nifty.dto.PnlDto;
 import com.nifty.util.ServiceUtil;
 import com.nifty.util.SuperTrendIndicator;
 import com.trading.Index;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONObject;
 import org.ta4j.core.BarSeries;
 
 import java.text.SimpleDateFormat;
@@ -133,7 +136,7 @@ public class FetchAndUpdateCandlesTask implements Runnable {
 
     private void checkAndtakeActualTrade() {
         List<Index> indexList = serviceUtil.intializeSymbolTokenMap(smartConnect);
-
+        Order order = null;
         int length = superTrendIndicator.getSeries().getBarCount();
         String optionType = Double.parseDouble(serviceUtil.niftyLtp) > superTrendIndicator.getValue(length - 1)
                 ? "PE" : "CE";
@@ -150,10 +153,26 @@ public class FetchAndUpdateCandlesTask implements Runnable {
         if (superTrendIndicator.getSignal(superTrendIndicator.getSeries().getBarCount() - 1).equals("")) {
             // first exit all Positions
             try {
-                AngelConnector.placeOrder(smartConnect, orderParams);
+                order = AngelConnector.placeOrder(smartConnect, orderParams);
             } catch (Exception | SmartAPIException e) {
                 e.printStackTrace();
             }
+
+            findPnlForTesting(order, orderParams);
+        }
+    }
+
+    private void findPnlForTesting(Order order, OrderParams orderParams) {
+        if(order != null){
+            List<PnlDto> pnlDtos = serviceUtil.fetchExistionPositions();
+            PnlDto pnlDto = new PnlDto();
+            JSONObject ltp = smartConnect.getLTP(orderParams.exchange, orderParams.tradingsymbol, orderParams.symboltoken);
+            pnlDto.sellPrice = (double) ltp.get("dd");
+            pnlDto.tradingsymbol = orderParams.tradingsymbol;
+            serviceUtil.addIntoPosition(pnlDto);
+
+            // existing position + new order ke ltp se
+            serviceUtil.runningPnl((Double) ltp.get("dd"), orderParams.tradingsymbol);
         }
     }
 

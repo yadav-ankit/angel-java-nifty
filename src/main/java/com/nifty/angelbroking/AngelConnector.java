@@ -79,7 +79,7 @@ public class AngelConnector {
     }
 
     /** Place order. */
-    public static void placeOrder(SmartConnect smartConnect,OrderParams orderParams) throws SmartAPIException, IOException {
+    public static Order placeOrder(SmartConnect smartConnect,OrderParams orderParams) throws SmartAPIException, IOException {
 
         orderParams.variety = "NORMAL";
        // orderParams.quantity = 1;
@@ -95,6 +95,8 @@ public class AngelConnector {
         orderParams.stoploss = "0";
 
         Order order = smartConnect.placeOrder(orderParams, Constants.VARIETY_NORMAL);
+
+        return order;
     }
 
 

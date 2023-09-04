@@ -1,11 +1,14 @@
 package com.nifty.util;
 
 import com.angelbroking.smartapi.SmartConnect;
+import com.angelbroking.smartapi.models.Order;
 import com.google.gson.*;
 import com.nifty.angelbroking.AngelConnector;
+import com.nifty.dto.PnlDto;
 import com.trading.Index;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -30,6 +33,9 @@ import java.util.stream.Collectors;
 public class ServiceUtil {
 
     public String niftyLtp;
+
+    @Autowired
+    PnlHelper pnlHelper;
 
     private static HttpHeaders getHeaders() {
         HttpHeaders headers = new HttpHeaders();
@@ -264,6 +270,19 @@ public class ServiceUtil {
                 return 200;
         }
         return 300;
+    }
+
+    public List<PnlDto> fetchExistionPositions(){
+        return pnlHelper.existingPositions;
+    }
+
+    public List<PnlDto> addIntoPosition(PnlDto pnlDto){
+        pnlHelper.existingPositions.add(pnlDto);
+        return pnlHelper.existingPositions;
+    }
+
+    public double runningPnl(double ltp,String tradingSymbol){
+       return  pnlHelper.runningPnl(ltp,tradingSymbol);
     }
 
 
