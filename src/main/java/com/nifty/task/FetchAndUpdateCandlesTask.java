@@ -1,19 +1,28 @@
 package com.nifty.task;
 
 import com.angelbroking.smartapi.SmartConnect;
+import com.angelbroking.smartapi.http.exceptions.SmartAPIException;
+import com.angelbroking.smartapi.models.OrderParams;
 import com.nifty.angelbroking.AngelConnector;
 import com.nifty.dto.Candle;
+import com.nifty.util.ServiceUtil;
 import com.nifty.util.SuperTrendIndicator;
+import com.trading.Index;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.ta4j.core.BarSeries;
 
 import java.time.ZonedDateTime;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 
 @Slf4j
 public class FetchAndUpdateCandlesTask implements Runnable {
+
+    @Autowired
+    ServiceUtil serviceUtil;
 
     private final AtomicLong startTime;
 
@@ -63,7 +72,7 @@ public class FetchAndUpdateCandlesTask implements Runnable {
                 low.set(Math.min(open.get(),Math.min(niftyLtp, low.get())));
             }
 
-            if (System.currentTimeMillis() - startTime.get() >= 300000) {
+            if (System.currentTimeMillis() - startTime.get() >= 60000) {
                 log.info("5 minutes over ..new candle formed");
 
                 close.set(niftyLtp);
@@ -86,6 +95,7 @@ public class FetchAndUpdateCandlesTask implements Runnable {
                 open.set(niftyLtp);
 
                 printCandleLiveData(candle);
+                checkAndtakeActualTrade();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -100,6 +110,26 @@ public class FetchAndUpdateCandlesTask implements Runnable {
             log.info("high " + candle.high);
             log.info("low " + candle.low);
             log.info("------------------");
+        }
+    }
+
+
+    private void checkAndtakeActualTrade(){
+        List<Index> indexList =  serviceUtil.intializeSymbolTokenMap(smartConnect);
+
+        Index strikePriceToTrade = serviceUtil.getNearestPremiumMatched(indexList);
+
+        OrderParams orderParams = new OrderParams();
+        orderParams.symbolToken = strikePriceToTrade.getToken();
+        orderParams.tradingsymbol = strikePriceToTrade.getSymbol();
+
+        if(superTrendIndicator.getSignal(superTrendIndicator.getSeries().getBarCount() - 1).equals("")){
+
+            try{
+                AngelConnector.placeOrder(smartConnect,orderParams);
+            }catch (Exception | SmartAPIException e){
+                e.printStackTrace();
+            }
         }
     }
 }

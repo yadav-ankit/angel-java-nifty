@@ -4,7 +4,9 @@ import com.angelbroking.smartapi.SmartConnect;
 import com.nifty.angelbroking.AngelConnector;
 import com.nifty.dto.Candle;
 import com.nifty.task.FetchAndUpdateCandlesTask;
+import com.nifty.util.ServiceUtil;
 import com.nifty.util.SuperTrendIndicator;
+import com.trading.Index;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +22,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -108,6 +111,7 @@ public class MorningService {
 
         executor.scheduleAtFixedRate(task,
                 0, 10, TimeUnit.SECONDS);
+
     }
 
 }

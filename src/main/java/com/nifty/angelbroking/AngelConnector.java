@@ -2,13 +2,19 @@ package com.nifty.angelbroking;
 
 import com.angelbroking.smartapi.SmartConnect;
 import com.angelbroking.smartapi.http.SessionExpiryHook;
+import com.angelbroking.smartapi.http.exceptions.SmartAPIException;
+import com.angelbroking.smartapi.models.Order;
+import com.angelbroking.smartapi.models.OrderParams;
 import com.angelbroking.smartapi.models.User;
+import com.angelbroking.smartapi.utils.Constants;
 import de.taimos.totp.TOTP;
 import org.apache.commons.codec.binary.Base32;
 import org.apache.commons.codec.binary.Hex;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+
+import java.io.IOException;
 
 @Service
 public class AngelConnector {
@@ -70,6 +76,25 @@ public class AngelConnector {
 
          */
         return String.valueOf(niftyLtp);
+    }
+
+    /** Place order. */
+    public static void placeOrder(SmartConnect smartConnect,OrderParams orderParams) throws SmartAPIException, IOException {
+
+        orderParams.variety = "NORMAL";
+        orderParams.quantity = 1;
+      //  orderParams.symboltoken = "3045";
+        orderParams.exchange = Constants.EXCHANGE_NSE;
+        orderParams.ordertype = Constants.ORDER_TYPE_MARKET;
+    //    orderParams.tradingsymbol = "SBIN-EQ";
+        orderParams.producttype = Constants.PRODUCT_INTRADAY;
+        orderParams.duration = Constants.DURATION_DAY;
+        orderParams.transactiontype = Constants.TRANSACTION_TYPE_SELL;
+       // orderParams.price = 122.2;
+        orderParams.squareoff = "0";
+        orderParams.stoploss = "0";
+
+        Order order = smartConnect.placeOrder(orderParams, Constants.VARIETY_NORMAL);
     }
 
 

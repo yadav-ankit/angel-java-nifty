@@ -48,7 +48,7 @@ public class ServiceUtil {
         return number;
     }
 
-    private static List<Index> intializeSymbolTokenMap(SmartConnect smartConnect) {
+    public static List<Index> intializeSymbolTokenMap(SmartConnect smartConnect) {
         HttpEntity<String> request = new HttpEntity<>(getHeaders());
 
         String url = "https://margincalculator.angelbroking.com/OpenAPI_File/files/OpenAPIScripMaster.json";
@@ -160,11 +160,10 @@ public class ServiceUtil {
         Index e = new Index(); e.setLtp("18.33");
         optionsList.add(a); optionsList.add(b); optionsList.add(c); optionsList.add(d); optionsList.add(e);
 
-        Index ans = getNearestPremiumMatched(optionsList);
-        System.out.println(ans.getLtp());
+        Index ans = null;//getNearestPremiumMatched(optionsList);
     }
 
-    private static Index getNearestPremiumMatched(List<Index> optionsList) {
+    public Index getNearestPremiumMatched(List<Index> optionsList) {
         double premium = 10.00;
         double mini = 100000000.00;
         Index answerElement = null;
