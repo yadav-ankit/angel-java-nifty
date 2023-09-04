@@ -20,10 +20,9 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -162,14 +161,6 @@ public class ServiceUtil {
         optionsList.add(a); optionsList.add(b); optionsList.add(c); optionsList.add(d); optionsList.add(e);
 
         Index ans = null;//getNearestPremiumMatched(optionsList);
-
-
-        String x =  "19457.85";
-
-        int dd = (int) Double.parseDouble(x);
-
-        System.out.println(dd);
-
     }
 
     public Index getNearestPremiumMatched(List<Index> optionsList) {
@@ -217,30 +208,23 @@ public class ServiceUtil {
         return ((daysToExpire + 1) <= 6);
     }
 
-    public List<Candle> extractLastNCandles(List<Candle> candleList, int n) {
-        List<Candle> finalCandles = new ArrayList<>();
-        int size = candleList.size();
 
-        if (n > size) {
-            log.error("N is greater  then candles List size");
-            return new ArrayList<>();
-        }
+    public boolean isTimeInBetween(String startTime, String endTime, String checkTime) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm:ss", Locale.US);
+        LocalTime startLocalTime = LocalTime.parse(startTime, formatter);
 
-        for (int i = size - n; i < size; i++) {
-            finalCandles.add(candleList.get(i));
-        }
-        return finalCandles;
-    }
+        LocalTime endLocalTime = LocalTime.parse(endTime, formatter);
+        LocalTime checkLocalTime = LocalTime.parse(checkTime, formatter);
 
-    private void unusedMethod() {
-           /*
-        List<Index> niftyList = intializeSymbolTokenMap(smartConnect);
-        for (Index ele : niftyList) {
-            JSONObject obj = smartConnect.getLTP(ele.getExchSeg(), ele.getSymbol(), ele.getToken());
-            ele.setLtp(obj.get("ltp").toString());
-            Thread.sleep(100);
+        boolean isInBetween = false;
+        if (endLocalTime.isAfter(startLocalTime)) {
+            if (startLocalTime.isBefore(checkLocalTime) && endLocalTime.isAfter(checkLocalTime)) {
+                isInBetween = true;
+            }
+        } else if (checkLocalTime.isAfter(startLocalTime) || checkLocalTime.isBefore(endLocalTime)) {
+            isInBetween = true;
         }
-            */
+       return isInBetween;
     }
 
 

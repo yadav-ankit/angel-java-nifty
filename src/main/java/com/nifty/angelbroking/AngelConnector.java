@@ -82,9 +82,9 @@ public class AngelConnector {
     public static void placeOrder(SmartConnect smartConnect,OrderParams orderParams) throws SmartAPIException, IOException {
 
         orderParams.variety = "NORMAL";
-        orderParams.quantity = 1;
+       // orderParams.quantity = 1;
       //  orderParams.symboltoken = "3045";
-        orderParams.exchange = Constants.EXCHANGE_NSE;
+        orderParams.exchange = Constants.EXCHANGE_NFO;
         orderParams.ordertype = Constants.ORDER_TYPE_MARKET;
     //    orderParams.tradingsymbol = "SBIN-EQ";
         orderParams.producttype = Constants.PRODUCT_INTRADAY;

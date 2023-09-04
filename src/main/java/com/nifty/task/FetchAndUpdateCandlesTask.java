@@ -12,7 +12,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.ta4j.core.BarSeries;
 
+import java.text.SimpleDateFormat;
 import java.time.ZonedDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicLong;
@@ -49,6 +51,17 @@ public class FetchAndUpdateCandlesTask implements Runnable {
 
     @Override
     public void run() {
+
+        Date date = new Date();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
+        String currentTime = dateFormat.format(date);
+
+        if(serviceUtil.isTimeInBetween("09:15:00","15:20:00",currentTime)){
+            executeRun();
+        }
+    }
+
+    private void executeRun(){
         AtomicReference<Double> close = new AtomicReference<>();
         try {
             String ltp = AngelConnector.getNiftyltp(smartConnect);
@@ -73,7 +86,7 @@ public class FetchAndUpdateCandlesTask implements Runnable {
                 low.set(Math.min(open.get(),Math.min(niftyLtp, low.get())));
             }
 
-            if (System.currentTimeMillis() - startTime.get() >= 60000) {
+            if (System.currentTimeMillis() - startTime.get() >= 20000) {
                 log.info("5 minutes over ..new candle formed");
 
                 close.set(niftyLtp);
@@ -101,9 +114,7 @@ public class FetchAndUpdateCandlesTask implements Runnable {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
     }
-
     private void printCandleLiveData(Candle candle) {
         if (candle != null) {
             log.info("close " + candle.close);
@@ -124,9 +135,9 @@ public class FetchAndUpdateCandlesTask implements Runnable {
         orderParams.symbolToken =   "45037"; //strikePriceToTrade.getToken();
         orderParams.symboltoken =  "45037"; //strikePriceToTrade.getToken();
         orderParams.tradingsymbol =   "NIFTY07SEP2319700CE"; //strikePriceToTrade.getSymbol();
+        orderParams.quantity = 100;
 
         if(superTrendIndicator.getSignal(superTrendIndicator.getSeries().getBarCount() - 1).equals("")){
-
             try{
                 AngelConnector.placeOrder(smartConnect,orderParams);
             }catch (Exception | SmartAPIException e){
