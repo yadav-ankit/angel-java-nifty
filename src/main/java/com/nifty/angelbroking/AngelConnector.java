@@ -87,9 +87,9 @@ public class AngelConnector {
         orderParams.exchange = Constants.EXCHANGE_NFO;
         orderParams.ordertype = Constants.ORDER_TYPE_MARKET;
     //    orderParams.tradingsymbol = "SBIN-EQ";
-        orderParams.producttype = Constants.PRODUCT_INTRADAY;
+        orderParams.producttype = Constants.DURATION_DAY;
         orderParams.duration = Constants.DURATION_DAY;
-        orderParams.transactiontype = Constants.TRANSACTION_TYPE_SELL;
+       // orderParams.transactiontype = Constants.TRANSACTION_TYPE_SELL;
        // orderParams.price = 122.2;
         orderParams.squareoff = "0";
         orderParams.stoploss = "0";

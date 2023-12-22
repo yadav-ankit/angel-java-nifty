@@ -4,6 +4,7 @@ import com.angelbroking.smartapi.SmartConnect;
 import com.angelbroking.smartapi.http.exceptions.SmartAPIException;
 import com.angelbroking.smartapi.models.Order;
 import com.angelbroking.smartapi.models.OrderParams;
+import com.angelbroking.smartapi.utils.Constants;
 import com.nifty.angelbroking.AngelConnector;
 import com.nifty.dto.Candle;
 import com.nifty.dto.PnlDto;
@@ -11,6 +12,7 @@ import com.nifty.util.ServiceUtil;
 import com.nifty.util.SuperTrendIndicator;
 import com.trading.Index;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.json.JSONObject;
 import org.ta4j.core.BarSeries;
 
@@ -57,7 +59,22 @@ public class FetchAndUpdateCandlesTask implements Runnable {
         if (serviceUtil.isTimeInBetween("09:15:00", "15:20:00", currentTime)) {
             executeRun();
         } else {
+            /*
             // exit all positions
+            Order exitOrder = null;
+
+            try {
+                exitOrder = exitAllPositions();
+            } catch (Exception e){
+                e.printStackTrace();
+            } finally {
+                // if exiting fails then try again after 5 mins & only then place a fresh order.
+                // may need to update this as 10 mins can become huge.
+                if(exitOrder == null){
+                    return;
+                }
+            }
+             */
         }
     }
 
@@ -130,23 +147,25 @@ public class FetchAndUpdateCandlesTask implements Runnable {
 
 
     private void checkAndTakeActualTrade() {
-        List<Index> indexList = serviceUtil.intializeSymbolTokenMap(smartConnect);
+        OrderParams orderParams = getOrderParamsForNewTrade();
         Order order = null;
-        int length = superTrendIndicator.getSeries().getBarCount();
-        String optionType = Double.parseDouble(serviceUtil.niftyLtp) > superTrendIndicator.getValue(length - 1)
-                ? "PE" : "CE";
-        int distance_from_atm = serviceUtil.getDistanceFromATM(LocalDate.now().getDayOfWeek());
-        Index strikePriceToTrade = serviceUtil.getAtLeastPointsAwayFromATM(indexList, optionType, distance_from_atm);
-
-        OrderParams orderParams = new OrderParams();
-        orderParams.symbolToken = strikePriceToTrade.getToken();
-        orderParams.symboltoken = strikePriceToTrade.getToken();
-        orderParams.tradingsymbol = strikePriceToTrade.getSymbol();
-        orderParams.quantity = 700;
 
         // in PROD ..change this to != ""
         if (!superTrendIndicator.getSignal(superTrendIndicator.getSeries().getBarCount() - 1).equals("")) {
-            // first exit all Positions
+            Order exitOrder = null;
+
+            try {
+                exitOrder = exitAllPositions();
+            } catch (Exception e){
+                e.printStackTrace();
+            } finally {
+                // if exiting fails then try again after 5 mins & only then place a fresh order.
+                // may need to update this as 10 mins can become huge.
+                if(exitOrder == null){
+                    return;
+                }
+            }
+
             try {
                 order = AngelConnector.placeOrder(smartConnect, orderParams);
             } catch (Exception | SmartAPIException e) {
@@ -166,6 +185,24 @@ public class FetchAndUpdateCandlesTask implements Runnable {
 
             serviceUtil.addIntoPosition(pnlDto);
         }
+    }
+
+    @NotNull
+    private OrderParams getOrderParamsForNewTrade() {
+        List<Index> indexList = serviceUtil.intializeSymbolTokenMap(smartConnect);
+        int length = superTrendIndicator.getSeries().getBarCount();
+        String optionType = Double.parseDouble(serviceUtil.niftyLtp) > superTrendIndicator.getValue(length - 1)
+                ? "PE" : "CE";
+        int distance_from_atm = serviceUtil.getDistanceFromATM(LocalDate.now().getDayOfWeek());
+        Index strikePriceToTrade = serviceUtil.getAtLeastPointsAwayFromATM(indexList, optionType, distance_from_atm);
+
+        OrderParams orderParams = new OrderParams();
+        orderParams.symbolToken = strikePriceToTrade.getToken();
+        orderParams.symboltoken = strikePriceToTrade.getToken();
+        orderParams.tradingsymbol = strikePriceToTrade.getSymbol();
+        orderParams.quantity = 700;
+        orderParams.transactiontype = Constants.TRANSACTION_TYPE_SELL;
+        return orderParams;
     }
 
     private void findPnlForTesting() {
@@ -202,6 +239,7 @@ public class FetchAndUpdateCandlesTask implements Runnable {
         orderParams.symbolToken = strikePriceToTrade.getToken();
         orderParams.symboltoken = strikePriceToTrade.getToken();
         orderParams.tradingsymbol = strikePriceToTrade.getSymbol();
+        orderParams.transactiontype = Constants.TRANSACTION_TYPE_SELL;
         orderParams.quantity = 700;
 
         // if it is 9 25
@@ -232,5 +270,32 @@ public class FetchAndUpdateCandlesTask implements Runnable {
             serviceUtil.addIntoPosition(pnlDto);
             serviceUtil.firstTradeTaken = true;
         }
+    }
+
+    private Order exitAllPositions(){
+        PnlDto runningOrder = serviceUtil.fetchExistingPositions().stream().filter(s -> !s.isCompleted).findAny().orElse(null);
+        Order order = null;
+
+        OrderParams orderParams = new OrderParams();
+
+        JSONObject jsonObject = smartConnect.getPosition();
+        JSONObject position = jsonObject.getJSONObject("data");
+
+        orderParams.symbolToken = position.getString("symboltoken");
+        orderParams.symboltoken = position.getString("symboltoken");
+        orderParams.tradingsymbol = position.getString("tradingsymbol");
+        orderParams.transactiontype = Constants.TRANSACTION_TYPE_BUY;
+        orderParams.quantity = 700;
+
+        try {
+            order = AngelConnector.placeOrder(smartConnect, orderParams);
+        } catch (Exception | SmartAPIException e) {
+            e.printStackTrace();
+        }
+
+        runningOrder.buyPrice = Double.parseDouble(order.averagePrice);
+        runningOrder.isCompleted = true;
+        runningOrder.realisedPnl = (runningOrder.sellPrice - runningOrder.buyPrice) * runningOrder.quantity;
+        return order;
     }
 }
