@@ -169,11 +169,12 @@ public class FetchAndUpdateCandlesTask implements Runnable {
             existionPositions = getSamplePNLs();
             PnlDto newOrder = new PnlDto();
             JSONObject ltp = smartConnect.getLTP(orderParams.exchange, orderParams.tradingsymbol, orderParams.symboltoken);
-            newOrder.sellPrice = Double.parseDouble(ltp.get("ltp").toString());
+            double ltpPrice = Double.parseDouble(ltp.get("ltp").toString());
+            newOrder.sellPrice =  ltpPrice;
             newOrder.isExecuted = true;
             newOrder.isCompleted = false;
             newOrder.tradingSymbol = orderParams.tradingsymbol;
-            newOrder.realisedPnl = (newOrder.sellPrice - (Double) ltp.get("dd")) * newOrder.quantity;
+            newOrder.realisedPnl = (newOrder.sellPrice - ltpPrice) * newOrder.quantity;
 
 
             serviceUtil.getPnlHelper().existingPositions = existionPositions;
