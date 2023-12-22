@@ -59,7 +59,7 @@ public class AngelConnector {
     }
 
     public static String getNiftyltp(SmartConnect smartConnect) {
-        JSONObject indexObj = smartConnect.getLTP("NSE", "NIFTY", "26000");
+        JSONObject indexObj = smartConnect.getLTP("NSE", "NIFTY", "99926000");
         // int niftyLtp = Integer.parseInt(indexObj.get("ltp").toString().substring(0, 5));
 
         double niftyLtp = Double.parseDouble(indexObj.get("ltp").toString());

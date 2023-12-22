@@ -8,5 +8,11 @@ public class PnlDto {
 
     public double realisedPnl;
 
-    public String tradingsymbol;
+    public String tradingSymbol;
+
+    public boolean isExecuted;
+
+    public boolean isCompleted;
+
+    public int quantity;
 }

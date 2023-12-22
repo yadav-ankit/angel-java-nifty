@@ -17,6 +17,7 @@ import org.ta4j.core.BarSeries;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -141,7 +142,7 @@ public class FetchAndUpdateCandlesTask implements Runnable {
         String optionType = Double.parseDouble(serviceUtil.niftyLtp) > superTrendIndicator.getValue(length - 1)
                 ? "PE" : "CE";
         int distance_from_atm = serviceUtil.getDistanceFromATM(LocalDate.now().getDayOfWeek());
-        Index strikePriceToTrade = serviceUtil.getAtleastPointsAwayFromATM(indexList, optionType, distance_from_atm);
+        Index strikePriceToTrade = serviceUtil.getAtLeastPointsAwayFromATM(indexList, optionType, distance_from_atm);
 
         OrderParams orderParams = new OrderParams();
         orderParams.symbolToken = strikePriceToTrade.getToken();
@@ -164,16 +165,39 @@ public class FetchAndUpdateCandlesTask implements Runnable {
 
     private void findPnlForTesting(Order order, OrderParams orderParams) {
         if(order != null){
-            List<PnlDto> pnlDtos = serviceUtil.fetchExistionPositions();
-            PnlDto pnlDto = new PnlDto();
+            List<PnlDto> existionPositions = serviceUtil.fetchExistingPositions();
+            existionPositions = getSamplePNLs();
+            PnlDto newOrder = new PnlDto();
             JSONObject ltp = smartConnect.getLTP(orderParams.exchange, orderParams.tradingsymbol, orderParams.symboltoken);
-            pnlDto.sellPrice = (double) ltp.get("dd");
-            pnlDto.tradingsymbol = orderParams.tradingsymbol;
-            serviceUtil.addIntoPosition(pnlDto);
+            newOrder.sellPrice = Double.parseDouble(ltp.get("ltp").toString());
+            newOrder.isExecuted = true;
+            newOrder.isCompleted = false;
+            newOrder.tradingSymbol = orderParams.tradingsymbol;
+            newOrder.realisedPnl = (newOrder.sellPrice - (Double) ltp.get("dd")) * newOrder.quantity;
+
+
+            serviceUtil.getPnlHelper().existingPositions = existionPositions;
+            serviceUtil.addIntoPosition(newOrder);
 
             // existing position + new order ke ltp se
-            serviceUtil.runningPnl((Double) ltp.get("dd"), orderParams.tradingsymbol);
+            double currentRunningPnl = serviceUtil.runningPnl();
+            log.info("total MTM today is {}" , currentRunningPnl);
         }
+    }
+
+    private List<PnlDto> getSamplePNLs(){
+        List<PnlDto> sampleDtos = new ArrayList<>();
+
+        PnlDto order1 = new PnlDto();
+        order1.sellPrice = 23.22;
+        order1.buyPrice = 14.78;
+        order1.isExecuted = true;
+        order1.tradingSymbol = "NSE22300CE2023";
+        order1.quantity = 700;
+        order1.realisedPnl = (order1.sellPrice - order1.buyPrice) * order1.quantity;
+
+        sampleDtos.add(order1);
+        return sampleDtos;
     }
 
     private void takeFirstTrade() {
@@ -184,7 +208,7 @@ public class FetchAndUpdateCandlesTask implements Runnable {
                 ? "PE" : "CE";
 
         int distance_from_atm = serviceUtil.getDistanceFromATM(LocalDate.now().getDayOfWeek());
-        Index strikePriceToTrade = serviceUtil.getAtleastPointsAwayFromATM(indexList, optionType, distance_from_atm);
+        Index strikePriceToTrade = serviceUtil.getAtLeastPointsAwayFromATM(indexList, optionType, distance_from_atm);
 
         OrderParams orderParams = new OrderParams();
         orderParams.symbolToken = strikePriceToTrade.getToken();

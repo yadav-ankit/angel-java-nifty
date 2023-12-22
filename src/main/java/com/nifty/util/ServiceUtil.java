@@ -1,7 +1,6 @@
 package com.nifty.util;
 
 import com.angelbroking.smartapi.SmartConnect;
-import com.angelbroking.smartapi.models.Order;
 import com.google.gson.*;
 import com.nifty.angelbroking.AngelConnector;
 import com.nifty.dto.PnlDto;
@@ -210,7 +209,7 @@ public class ServiceUtil {
         return finalList;
     }
 
-    public Index getAtleastPointsAwayFromATM(List<Index> optionsList, String optionType, int min_distance_from_atm) {
+    public Index getAtLeastPointsAwayFromATM(List<Index> optionsList, String optionType, int min_distance_from_atm) {
         int mini = 100000000;
         Index answerElement = null;
         optionType= "CE";
@@ -272,8 +271,8 @@ public class ServiceUtil {
         return 300;
     }
 
-    public List<PnlDto> fetchExistionPositions(){
-        return pnlHelper.existingPositions;
+    public List<PnlDto> fetchExistingPositions(){
+        return pnlHelper.existingPositions == null ? new ArrayList<>() : pnlHelper.existingPositions;
     }
 
     public List<PnlDto> addIntoPosition(PnlDto pnlDto){
@@ -281,8 +280,12 @@ public class ServiceUtil {
         return pnlHelper.existingPositions;
     }
 
-    public double runningPnl(double ltp,String tradingSymbol){
-       return  pnlHelper.runningPnl(ltp,tradingSymbol);
+    public double runningPnl(){
+       return  pnlHelper.runningPnl();
+    }
+
+    public PnlHelper getPnlHelper(){
+        return this.pnlHelper;
     }
 
 
