@@ -91,11 +91,9 @@ public class MorningService {
     private void startTrading(SuperTrendIndicator superTrendIndicator, Candle lastCandle) {
         SmartConnect smartConnect = AngelConnector.connectWithAngel();
 
-        final boolean[] isStarted = {false};
-
         AtomicReference<Double> open = new AtomicReference<>();
 
-        if (!superTrendIndicator.getSeries().isEmpty() && !isStarted[0]) {
+        if (!superTrendIndicator.getSeries().isEmpty() && !serviceUtil.firstTradeTaken) {
             open.set(lastCandle.close);
         }
 
@@ -109,7 +107,7 @@ public class MorningService {
         AtomicLong startTime = new AtomicLong(System.currentTimeMillis());
 
         FetchAndUpdateCandlesTask task = new FetchAndUpdateCandlesTask(startTime,
-                superTrendIndicator, smartConnect, isStarted, open,serviceUtil);
+                superTrendIndicator, smartConnect, open,serviceUtil);
 
         ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 

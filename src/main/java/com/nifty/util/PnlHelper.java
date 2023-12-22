@@ -20,6 +20,14 @@ public class PnlHelper {
         return currentRunnngPnl;
     }
 
+    public void addRunningPositonPNLInExistingPositionArray(double pnl){
+        for (PnlDto pnlDto : existingPositions) {
+            if(!pnlDto.isCompleted){
+                pnlDto.realisedPnl = pnl;
+            }
+        }
+    }
+
     public void squareOffCalculate(double ltp, String tradingSymbol) {
         for (PnlDto pnlDto : existingPositions) {
             if (tradingSymbol.equals(pnlDto.tradingSymbol)) {

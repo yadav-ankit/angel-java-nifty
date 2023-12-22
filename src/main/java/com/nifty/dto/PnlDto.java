@@ -1,5 +1,8 @@
 package com.nifty.dto;
 
+import lombok.Builder;
+
+@Builder
 public class PnlDto {
 
     public double buyPrice;
@@ -9,6 +12,8 @@ public class PnlDto {
     public double realisedPnl;
 
     public String tradingSymbol;
+
+    public String symbolToken;
 
     public boolean isExecuted;
 

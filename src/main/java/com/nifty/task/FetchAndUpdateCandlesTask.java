@@ -17,7 +17,6 @@ import org.ta4j.core.BarSeries;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
@@ -34,20 +33,16 @@ public class FetchAndUpdateCandlesTask implements Runnable {
 
     private final SmartConnect smartConnect;
 
-    private final boolean[] isStarted;
-
     private final AtomicReference<Double> open;
 
     AtomicReference<Double> low = new AtomicReference(999999.23);
     AtomicReference<Double> high = new AtomicReference(-999.23);
 
     public FetchAndUpdateCandlesTask(AtomicLong startTime, SuperTrendIndicator superTrendIndicator,
-                                     SmartConnect smartConnect, boolean[] isStarted, AtomicReference<Double> open
-            , ServiceUtil serviceUtil) {
+                                     SmartConnect smartConnect,AtomicReference<Double> open, ServiceUtil serviceUtil) {
         this.startTime = startTime;
         this.superTrendIndicator = superTrendIndicator;
         this.smartConnect = smartConnect;
-        this.isStarted = isStarted;
         this.open = open;
         this.serviceUtil = serviceUtil;
     }
@@ -61,7 +56,7 @@ public class FetchAndUpdateCandlesTask implements Runnable {
 
         if (serviceUtil.isTimeInBetween("09:15:00", "15:20:00", currentTime)) {
             executeRun();
-        }else{
+        } else {
             // exit all positions
         }
     }
@@ -82,19 +77,17 @@ public class FetchAndUpdateCandlesTask implements Runnable {
                 System.out.println("random no is = " + niftyLtp);
              */
 
-            takeFirstTrade();
-
-            if (isStarted[0]) {
+            if (!serviceUtil.firstTradeTaken) {
+                takeFirstTrade();
                 open.set(niftyLtp);
-                isStarted[0] = true;
             } else {
                 //high.set(Math.max(niftyLtp, high.get()));
                 high.set(Math.max(open.get(), Math.max(niftyLtp, high.get())));
                 low.set(Math.min(open.get(), Math.min(niftyLtp, low.get())));
             }
-
-            if (System.currentTimeMillis() - startTime.get() >= 20000) {
-                log.info("5 minutes over ..new candle formed");
+            // for 5 mins change to 300_000
+            if (System.currentTimeMillis() - startTime.get() >= 20_000) {
+                log.info("20 Seconds over ..new candle formed");
 
                 close.set(niftyLtp);
 
@@ -117,7 +110,8 @@ public class FetchAndUpdateCandlesTask implements Runnable {
                 open.set(niftyLtp);
 
                 printCandleLiveData(candle);
-                checkAndtakeActualTrade();
+                checkAndTakeActualTrade();
+                findPnlForTesting();
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -135,7 +129,7 @@ public class FetchAndUpdateCandlesTask implements Runnable {
     }
 
 
-    private void checkAndtakeActualTrade() {
+    private void checkAndTakeActualTrade() {
         List<Index> indexList = serviceUtil.intializeSymbolTokenMap(smartConnect);
         Order order = null;
         int length = superTrendIndicator.getSeries().getBarCount();
@@ -148,10 +142,10 @@ public class FetchAndUpdateCandlesTask implements Runnable {
         orderParams.symbolToken = strikePriceToTrade.getToken();
         orderParams.symboltoken = strikePriceToTrade.getToken();
         orderParams.tradingsymbol = strikePriceToTrade.getSymbol();
-        orderParams.quantity = 100;
+        orderParams.quantity = 700;
 
         // in PROD ..change this to != ""
-        if (superTrendIndicator.getSignal(superTrendIndicator.getSeries().getBarCount() - 1).equals("")) {
+        if (!superTrendIndicator.getSignal(superTrendIndicator.getSeries().getBarCount() - 1).equals("")) {
             // first exit all Positions
             try {
                 order = AngelConnector.placeOrder(smartConnect, orderParams);
@@ -159,46 +153,39 @@ public class FetchAndUpdateCandlesTask implements Runnable {
                 e.printStackTrace();
             }
 
-            findPnlForTesting(order, orderParams);
+            // since avgPrice = null so as of now use a constant val
+            // sellPrice(Double.parseDouble(order.averagePrice))
+            PnlDto pnlDto = PnlDto.builder()
+                    .sellPrice(18.22)
+                    .isCompleted(false)
+                    .isExecuted(true)
+                    .tradingSymbol(orderParams.tradingsymbol)
+                    .symbolToken(orderParams.symbolToken)
+                    .quantity(700)
+                    .build();
+
+            serviceUtil.addIntoPosition(pnlDto);
         }
     }
 
-    private void findPnlForTesting(Order order, OrderParams orderParams) {
-        if(order != null){
-            List<PnlDto> existionPositions = serviceUtil.fetchExistingPositions();
-            existionPositions = getSamplePNLs();
-            PnlDto newOrder = new PnlDto();
-            JSONObject ltp = smartConnect.getLTP(orderParams.exchange, orderParams.tradingsymbol, orderParams.symboltoken);
-            double ltpPrice = Double.parseDouble(ltp.get("ltp").toString());
-            newOrder.sellPrice =  ltpPrice;
-            newOrder.isExecuted = true;
-            newOrder.isCompleted = false;
-            newOrder.tradingSymbol = orderParams.tradingsymbol;
-            newOrder.realisedPnl = (newOrder.sellPrice - ltpPrice) * newOrder.quantity;
+    private void findPnlForTesting() {
+        List<PnlDto> existingPositions = serviceUtil.fetchExistingPositions();
 
-
-            serviceUtil.getPnlHelper().existingPositions = existionPositions;
-            serviceUtil.addIntoPosition(newOrder);
-
-            // existing position + new order ke ltp se
-            double currentRunningPnl = serviceUtil.runningPnl();
-            log.info("total MTM today is {}" , currentRunningPnl);
+        if (existingPositions.isEmpty()) {
+            return;
         }
-    }
 
-    private List<PnlDto> getSamplePNLs(){
-        List<PnlDto> sampleDtos = new ArrayList<>();
+        PnlDto runningOrder = existingPositions.stream().filter(s -> !s.isCompleted).findAny().orElse(null);
+        JSONObject ltp = smartConnect.getLTP("NFO", runningOrder.tradingSymbol, runningOrder.symbolToken);
+        double ltpPrice = Double.parseDouble(ltp.get("ltp").toString());
 
-        PnlDto order1 = new PnlDto();
-        order1.sellPrice = 23.22;
-        order1.buyPrice = 14.78;
-        order1.isExecuted = true;
-        order1.tradingSymbol = "NSE22300CE2023";
-        order1.quantity = 700;
-        order1.realisedPnl = (order1.sellPrice - order1.buyPrice) * order1.quantity;
+        runningOrder.realisedPnl = (runningOrder.sellPrice - ltpPrice) * runningOrder.quantity;
+        serviceUtil.getPnlHelper().addRunningPositonPNLInExistingPositionArray(runningOrder.realisedPnl);
 
-        sampleDtos.add(order1);
-        return sampleDtos;
+        // existing position + new order ke ltp se
+        double currentRunningPnl = serviceUtil.runningPnl();
+        log.info("Current running Position = {} , sold at {} , at Ltp price : {}" , runningOrder.tradingSymbol , runningOrder.sellPrice , ltpPrice);
+        log.info("total MTM today is {}", ServiceUtil.roundFigure(currentRunningPnl));
     }
 
     private void takeFirstTrade() {
@@ -215,19 +202,35 @@ public class FetchAndUpdateCandlesTask implements Runnable {
         orderParams.symbolToken = strikePriceToTrade.getToken();
         orderParams.symboltoken = strikePriceToTrade.getToken();
         orderParams.tradingsymbol = strikePriceToTrade.getSymbol();
-        orderParams.quantity = 100;
+        orderParams.quantity = 700;
 
         // if it is 9 25
         Date date = new Date();
+        Order order = null;
         SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss");
         String currentTime = dateFormat.format(date);
 
-        if(smartConnect.getPosition().get("data").equals(null) && serviceUtil.isTimeInBetween("09:25:00", "09:29:00", currentTime)){
+        if (smartConnect.getPosition().get("data").equals(null) && serviceUtil.isTimeInBetween("09:25:00", "15:29:00", currentTime)) {
             try {
-                AngelConnector.placeOrder(smartConnect, orderParams);
+                order = AngelConnector.placeOrder(smartConnect, orderParams);
             } catch (Exception | SmartAPIException e) {
                 e.printStackTrace();
             }
+            // since avgPrice = null so as of now use a constant val
+            // sellPrice(Double.parseDouble(order.averagePrice))
+            PnlDto pnlDto = PnlDto.builder()
+                    .sellPrice(18.22)
+                    .isCompleted(false)
+                    .isExecuted(true)
+                    .tradingSymbol(orderParams.tradingsymbol)
+                    .symbolToken(orderParams.symbolToken)
+                    .quantity(700)
+                    .build();
+
+            log.info("First trade taken wth Symbol : {} at price : {}" , orderParams.tradingsymbol , 18);
+
+            serviceUtil.addIntoPosition(pnlDto);
+            serviceUtil.firstTradeTaken = true;
         }
     }
 }

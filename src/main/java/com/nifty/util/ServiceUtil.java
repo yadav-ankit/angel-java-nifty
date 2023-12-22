@@ -33,6 +33,8 @@ public class ServiceUtil {
 
     public String niftyLtp;
 
+    public boolean firstTradeTaken;
+
     @Autowired
     PnlHelper pnlHelper;
 
@@ -276,7 +278,9 @@ public class ServiceUtil {
     }
 
     public List<PnlDto> addIntoPosition(PnlDto pnlDto){
-        pnlHelper.existingPositions.add(pnlDto);
+        List<PnlDto> pnlDtoList = fetchExistingPositions();
+        pnlDtoList.add(pnlDto);
+        pnlHelper.existingPositions = pnlDtoList;
         return pnlHelper.existingPositions;
     }
 
