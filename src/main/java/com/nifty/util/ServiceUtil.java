@@ -214,7 +214,7 @@ public class ServiceUtil {
     public Index getAtLeastPointsAwayFromATM(List<Index> optionsList, String optionType, int min_distance_from_atm) {
         int mini = 100000000;
         Index answerElement = null;
-        optionType= "CE";
+      //  optionType= "CE";
         for (Index ele : optionsList) {
             String sym = ele.getSymbol();
             if (sym.contains(optionType)) {

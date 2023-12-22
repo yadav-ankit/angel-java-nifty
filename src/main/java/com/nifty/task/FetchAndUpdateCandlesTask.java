@@ -170,20 +170,22 @@ public class FetchAndUpdateCandlesTask implements Runnable {
                 order = AngelConnector.placeOrder(smartConnect, orderParams);
             } catch (Exception | SmartAPIException e) {
                 e.printStackTrace();
+            } finally {
+                if(order != null){
+                    // since avgPrice = null so as of now use a constant val
+                    // sellPrice(Double.parseDouble(order.averagePrice))
+                    PnlDto pnlDto = PnlDto.builder()
+                            .sellPrice(18.22)
+                            .isCompleted(false)
+                            .isExecuted(true)
+                            .tradingSymbol(orderParams.tradingsymbol)
+                            .symbolToken(orderParams.symbolToken)
+                            .quantity(700)
+                            .build();
+
+                    serviceUtil.addIntoPosition(pnlDto);
+                }
             }
-
-            // since avgPrice = null so as of now use a constant val
-            // sellPrice(Double.parseDouble(order.averagePrice))
-            PnlDto pnlDto = PnlDto.builder()
-                    .sellPrice(18.22)
-                    .isCompleted(false)
-                    .isExecuted(true)
-                    .tradingSymbol(orderParams.tradingsymbol)
-                    .symbolToken(orderParams.symbolToken)
-                    .quantity(700)
-                    .build();
-
-            serviceUtil.addIntoPosition(pnlDto);
         }
     }
 
@@ -253,22 +255,25 @@ public class FetchAndUpdateCandlesTask implements Runnable {
                 order = AngelConnector.placeOrder(smartConnect, orderParams);
             } catch (Exception | SmartAPIException e) {
                 e.printStackTrace();
+            } finally {
+                if(order != null){
+                    // since avgPrice = null so as of now use a constant val
+                    // sellPrice(Double.parseDouble(order.averagePrice))
+                    PnlDto pnlDto = PnlDto.builder()
+                            .sellPrice(18.22)
+                            .isCompleted(false)
+                            .isExecuted(true)
+                            .tradingSymbol(orderParams.tradingsymbol)
+                            .symbolToken(orderParams.symbolToken)
+                            .quantity(700)
+                            .build();
+
+                    log.info("First trade taken wth Symbol : {} at price : {}" , orderParams.tradingsymbol , 18);
+
+                    serviceUtil.addIntoPosition(pnlDto);
+                    serviceUtil.firstTradeTaken = true;
+                }
             }
-            // since avgPrice = null so as of now use a constant val
-            // sellPrice(Double.parseDouble(order.averagePrice))
-            PnlDto pnlDto = PnlDto.builder()
-                    .sellPrice(18.22)
-                    .isCompleted(false)
-                    .isExecuted(true)
-                    .tradingSymbol(orderParams.tradingsymbol)
-                    .symbolToken(orderParams.symbolToken)
-                    .quantity(700)
-                    .build();
-
-            log.info("First trade taken wth Symbol : {} at price : {}" , orderParams.tradingsymbol , 18);
-
-            serviceUtil.addIntoPosition(pnlDto);
-            serviceUtil.firstTradeTaken = true;
         }
     }
 
